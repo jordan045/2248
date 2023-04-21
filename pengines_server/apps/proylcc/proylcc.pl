@@ -21,6 +21,15 @@ celda(Grid,[X|[Y]],Celda) :- %EXTRAE CELDA
 	numi([X|[Y]],RIndex),
 	nth0(RIndex,Grid,Celda).
 
+resultado(SumaTotal, Mult, Bloque) :- 
+	SumaTotal =< Mult,
+	Bloque is Mult.
+	
+resultado(SumaTotal, Mult, Bloque)  :-
+	BloqueAux is Mult * 2,
+	resultado(SumaTotal, BloqueAux, Bloque).
+
+
 % set_all_cero(Grid,Path,RGrids) // podria no estar
 set_all_cero(Grid,[],Grid,SumaTotal).
 
@@ -29,7 +38,8 @@ set_all_cero(Grid,[P],RGrid,SumaTotal) :-
 	numi(P,RIndex),
 	celda(Grid,P,Valor),
 	SumaTotalAux is SumaTotal + Valor,
-	replace(Grid, RIndex, SumaTotalAux, Aux),
+	resultado(SumaTotalAux, 1, Bloque),
+	replace(Grid, RIndex, Bloque, Aux),
 	set_all_cero(Aux,[],RGrid,SumaTotalAux).
 
 set_all_cero(Grid,[P|Ps],RGrid,SumaTotal):-
@@ -45,14 +55,3 @@ join(Grid, _NumOfColumns, Path, RGrids):-
 	RGrids = [Aux,Aux].
 
 %random/3
-
-
-
-
-
-
-
-
-%	Grid = [N | Ns],	% La implementación actual es simplemente a modo de muestra, y no tiene sentido, debe reepmplazarla
-%	N2 is N * 2,		% por una implementación válida.
-%	RGrids = [[0 | Ns], [N2 | Ns]].
