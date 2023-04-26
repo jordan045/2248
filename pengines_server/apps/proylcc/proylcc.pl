@@ -82,20 +82,78 @@ generate([H|T],I,[H|RGrid]) :-
 	NI is I+1,
 	generate(T,NI,RGrid).
 
+sonIguales(Grid, I, X):-
+	nth0(I, Grid, V),
+	V is X.
 
-% generate(+Grid,Index,RGrid)
-/* generate([],40,Grid).
-generate([0|T],I,RGrid) :-
-	NI is I+1,
-	random(0,8,Exp),
-	NewNumber is 2**Exp,
-	replace([0|T],I,NewNumber,RGrid),
-	generate(T,NI,RGrid).
-generate([_|T],I,RGrid) :-
-	NI is I+1,
-	generate(T,NI,RGrid). */
+% formarListaIguales(+Grid, +Index, +Value -LoL)
+% Devuelve una lista de listas, donde cada una de ellas está formada por los indices
+% de los cubos adyacentes con igual valor
 
-% Recorrer lista, si hay un 0 genera un random y replace
+formarListaIguales([],40,[]).	
+formarListaIguales([X|Xs],I,[[I]|T]):-
+	X > 0,
+	NI is I-6,
+	NI > -1,
+	formarListaIguales(Xs, NI, T),
+	sonIguales([X|Xs],NI,X).
+formarListaIguales([X|Xs],I,[[I]|T]):-
+	X > 0,
+	NI is I-5,
+	NI > -1,
+	formarListaIguales(Xs, NI, T),
+	sonIguales([X|Xs],NI,X).
+formarListaIguales([X|Xs],I,[[I]|T]):-
+	X > 0,
+	NI is I-4,
+	NI > -1,
+	formarListaIguales(Xs, NI, T),
+	sonIguales([X|Xs],NI,X).
+formarListaIguales([X|Xs],I,[[I]|T]):-
+	X > 0,
+	NI is I-1,
+	NI > -1,
+	formarListaIguales(Xs, NI, T),
+	sonIguales([X|Xs],NI,X).
+formarListaIguales([X|Xs],I,[[I]|T]):-
+	X > 0,
+	NI is I+1,
+	NI > -1,
+	formarListaIguales(Xs, NI, T),
+	sonIguales([X|Xs],NI,X).
+formarListaIguales([X|Xs],I,[[I]|T]):-
+	X > 0,
+	NI is I+4,
+	NI > -1,
+	formarListaIguales(Xs, NI, T),
+	sonIguales([X|Xs],NI,X).
+formarListaIguales([X|Xs],I,[[I]|T]):-
+	X > 0,
+	NI is I+5,
+	NI > -1,
+	formarListaIguales(Xs, NI, T),
+	sonIguales([X|Xs],NI,X).
+formarListaIguales([X|Xs],I,[[I]|T]):-
+	X > 0,
+	NI is I+6,
+	NI > -1,
+	formarListaIguales(Xs, NI, T),
+	sonIguales([X|Xs],NI,X).
+
+booster(Grid, RGrid):-
+	formarListaIguales(Grid, 0, LoL).
+
+%Lo que nos quedaria hacer ahora es, para cada lista en la LoL
+%	Simular un Join
+%	Vamos vaciando la LoL, llamando a Set_all_cero (path = cabeza de LoL) y a add0s
+%	Una vez hecho esto, aplicamos gravedad y generamos nuevos bloques.
+	
+
+/*
+-6 -5 -4
+-1  * +1
+ 4  5  6
+*/
 
 join(Grid, _NumOfColumns, Path, RGrids):-
 	set_all_cero(Grid,Path,Aux,0),
