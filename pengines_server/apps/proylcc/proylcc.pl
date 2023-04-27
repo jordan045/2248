@@ -90,55 +90,74 @@ sonIguales(Grid, I, X):-
 % Devuelve una lista de listas, donde cada una de ellas está formada por los indices
 % de los cubos adyacentes con igual valor
 
+check_up(I):-
+	I > 4.
+check_down(I):-
+	I < 35.
+check_left(I):-
+	Mod is I mod 5,
+	Mod =\= 0.
+check_right(I):-
+	Mod is I mod 5,
+	Mod =\= 4.
+
+
 formarListaIguales([],40,[]).	
 formarListaIguales([X|Xs],I,[[I]|T]):-
+	check_up(I),
+	check_left(I),
 	X > 0,
 	NI is I-6,
-	NI > -1,
-	formarListaIguales(Xs, NI, T),
-	sonIguales([X|Xs],NI,X).
+	sonIguales([X|Xs],NI,X),
+	formarListaIguales(Xs, NI, T).
 formarListaIguales([X|Xs],I,[[I]|T]):-
+	check_up(I),
 	X > 0,
 	NI is I-5,
-	NI > -1,
-	formarListaIguales(Xs, NI, T),
-	sonIguales([X|Xs],NI,X).
+	sonIguales([X|Xs],NI,X),
+	formarListaIguales(Xs, NI, T).
 formarListaIguales([X|Xs],I,[[I]|T]):-
+	check_right(I),
+	check_up(I),
 	X > 0,
 	NI is I-4,
-	NI > -1,
-	formarListaIguales(Xs, NI, T),
-	sonIguales([X|Xs],NI,X).
+	sonIguales([X|Xs],NI,X),
+	formarListaIguales(Xs, NI, T).
 formarListaIguales([X|Xs],I,[[I]|T]):-
+	check_left(I),
 	X > 0,
 	NI is I-1,
-	NI > -1,
-	formarListaIguales(Xs, NI, T),
-	sonIguales([X|Xs],NI,X).
+	sonIguales([X|Xs],NI,X),
+	formarListaIguales(Xs, NI, T).
 formarListaIguales([X|Xs],I,[[I]|T]):-
+	check_right(I),
 	X > 0,
 	NI is I+1,
-	NI > -1,
-	formarListaIguales(Xs, NI, T),
-	sonIguales([X|Xs],NI,X).
+	sonIguales([X|Xs],NI,X),
+	formarListaIguales(Xs, NI, T).
 formarListaIguales([X|Xs],I,[[I]|T]):-
+	check_down(I),
+	check_left(I)
 	X > 0,
 	NI is I+4,
-	NI > -1,
-	formarListaIguales(Xs, NI, T),
-	sonIguales([X|Xs],NI,X).
+	sonIguales([X|Xs],NI,X),
+	formarListaIguales(Xs, NI, T).
 formarListaIguales([X|Xs],I,[[I]|T]):-
+	check_down(I),
 	X > 0,
 	NI is I+5,
-	NI > -1,
-	formarListaIguales(Xs, NI, T),
-	sonIguales([X|Xs],NI,X).
+	sonIguales([X|Xs],NI,X),
+	formarListaIguales(Xs, NI, T).
 formarListaIguales([X|Xs],I,[[I]|T]):-
+	check_down(I),
+	check_right(I),
 	X > 0,
 	NI is I+6,
-	NI > -1,
-	formarListaIguales(Xs, NI, T),
-	sonIguales([X|Xs],NI,X).
+	sonIguales([X|Xs],NI,X),
+	formarListaIguales(Xs, NI, T).
+formarListaIguales([X|Xs],I,T) :-
+	NI is I+1,
+	formarListaIguales(Xs,NI,T).
 
 booster(Grid, RGrid):-
 	formarListaIguales(Grid, 0, LoL).
@@ -156,6 +175,7 @@ booster(Grid, RGrid):-
 */
 
 join(Grid, _NumOfColumns, Path, RGrids):-
+	formarListaIguales(Grid,0,LoL),
 	set_all_cero(Grid,Path,Aux,0),
 	add0s(Aux,0,NList),
 	gravity(Aux,NList,RGravity),
