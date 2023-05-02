@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import PengineClient from './PengineClient';
 import Board from './Board';
 import { joinResult } from './util';
+import MyButton from './Button';
 
 let pengine;
 
@@ -11,6 +12,7 @@ function Game() {
   const [grid, setGrid] = useState(null);
   const [numOfColumns, setNumOfColumns] = useState(null);
   const [score, setScore] = useState(0);
+  const [tempScore, setTempScore] = useState(0);
   const [path, setPath] = useState([]);
   const [waiting, setWaiting] = useState(false);
 
@@ -42,6 +44,7 @@ function Game() {
       return;
     }
     setPath(newPath);
+    setTempScore(score + joinResult(path, grid, numOfColumns));
     console.log(JSON.stringify(newPath));
   }
 
@@ -66,6 +69,7 @@ function Game() {
           RGrids
         ).
     */
+    setTempScore(0);
     const gridS = JSON.stringify(grid);
     const pathS = JSON.stringify(path);
     const queryS = "join(" + gridS + "," + numOfColumns + "," + pathS + ", RGrids)";
@@ -75,6 +79,20 @@ function Game() {
       if (success) {
         setScore(score + joinResult(path, grid, numOfColumns));
         setPath([]);
+        animateEffect(response['RGrids']);
+      } else {
+        setWaiting(false);
+      }
+    });
+  }
+
+  function booster(){
+    const gridS = JSON.stringify(grid);
+    const queryS = "booster(" + gridS + ", RGrids)";
+    console.log(queryS);
+    setWaiting(true);
+    pengine.query(queryS, (success, response) => {
+      if (success) {
         animateEffect(response['RGrids']);
       } else {
         setWaiting(false);
@@ -105,6 +123,7 @@ function Game() {
     <div className="game">
       <div className="header">
         <div className="score">{score}</div>
+        <div className="score">{tempScore}</div>
       </div>
       <Board
         grid={grid}
@@ -112,6 +131,10 @@ function Game() {
         path={path}
         onPathChange={onPathChange}
         onDone={onPathDone}
+      />
+      <MyButton
+        className='square'
+        onClick= {booster}
       />
     </div>
   );
