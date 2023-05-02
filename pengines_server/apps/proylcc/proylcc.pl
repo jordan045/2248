@@ -103,14 +103,14 @@ check_right(I):-
 
 checkearLista(I,[]).
 checkearLista(I, [X|Xs]):-
-	I is X,
+	\+ X is I,
 	checkearLista(I,Xs).
 
-chequearLoL(I,[]).
+/*chequearLoL(I,[]).
 chequearLoL(I,[[X|H]|T]):-
 	chequearLoL(I,[X|H]).
 chequearLoL(I,[X|H]):-
-	checkearLista(I,[X|H]).
+	checkearLista(I,[X|H]).*/
 
 formarListaIguales([],40,[],_).	
 formarListaIguales([X|Xs],I,[[I|H]|T],Aux):-
@@ -119,74 +119,86 @@ formarListaIguales([X|Xs],I,[[I|H]|T],Aux):-
 	X > 0,
 	NI is I-6,
 	sonIguales([X|Xs],NI,X),
-	chequearLoL(I,[[H]|T]),
+	%chequearLoL(I,[[H]|T]),
 	checkearLista(NI, Aux),
-	formarListaIguales(Xs, NI, T,[I|H]).
+	formarListaIguales(Xs, NI, [[H]|T],[I|Aux]).
 formarListaIguales([X|Xs],I,[[I|H]|T],Aux):-
 	check_up(I),
 	X > 0,
 	NI is I-5,
 	sonIguales([X|Xs],NI,X),
-	chequearLoL(I,[[H]|T]),
+	%chequearLoL(I,[[H]|T]),
 	checkearLista(NI, Aux),
-	formarListaIguales(Xs, NI, T,[I|H]).
+	formarListaIguales(Xs, NI, [[H]|T],[I|Aux]).
 formarListaIguales([X|Xs],I,[[I|H]|T],Aux):-
 	check_right(I),
 	check_up(I),
 	X > 0,
 	NI is I-4,
 	sonIguales([X|Xs],NI,X),
-	chequearLoL(I,[[H]|T]),
+	%chequearLoL(I,[[H]|T]),
 	checkearLista(NI, Aux),
-	formarListaIguales(Xs, NI, T,[I|H]).
+	formarListaIguales(Xs, NI, [[H]|T],[I|Aux]).
 formarListaIguales([X|Xs],I,[[I|H]|T],Aux):-
 	check_left(I),
 	X > 0,
 	NI is I-1,
 	sonIguales([X|Xs],NI,X),
-	chequearLoL(I,[[H]|T]),
+	%chequearLoL(I,[[H]|T]),
 	checkearLista(NI, Aux),
-	formarListaIguales(Xs, NI, T,[I|H]).
+	formarListaIguales(Xs, NI, [[H]|T],[I|Aux]).
 formarListaIguales([X|Xs],I,[[I|H]|T],Aux):-
 	check_right(I),
 	X > 0,
 	NI is I+1,
 	sonIguales([X|Xs],NI,X),
-	chequearLoL(I,[[H]|T]),
+	%chequearLoL(I,[[H]|T]),
 	checkearLista(NI, Aux),
-	formarListaIguales(Xs, NI, T,[I|H]).
+	formarListaIguales(Xs, NI, [[H]|T],[I|Aux]).
 formarListaIguales([X|Xs],I,[[I|H]|T],Aux):-
 	check_down(I),
 	check_left(I),
 	X > 0,
 	NI is I+4,
 	sonIguales([X|Xs],NI,X),
-	chequearLoL(I,[[H]|T]),
+	%chequearLoL(I,[[H]|T]),
 	checkearLista(NI, Aux),
-	formarListaIguales(Xs, NI, T,[I|H]).
+	formarListaIguales(Xs, NI, [[H]|T],[I|Aux]).
 formarListaIguales([X|Xs],I,[[I|H]|T],Aux):-
 	check_down(I),
 	X > 0,
 	NI is I+5,
 	sonIguales([X|Xs],NI,X),
-	chequearLoL(I,[[H]|T]),
+	%chequearLoL(I,[[H]|T]),
 	checkearLista(NI, Aux),
-	formarListaIguales(Xs, NI, T,[I|H]).
+	formarListaIguales(Xs, NI, [[H]|T],[I|Aux]).
 formarListaIguales([X|Xs],I,[[I|H]|T],Aux):-
 	check_down(I),
 	check_right(I),
 	X > 0,
 	NI is I+6,
 	sonIguales([X|Xs],NI,X),
-	chequearLoL(I,[[H]|T]),
+	%chequearLoL(I,[[H]|T]),
 	checkearLista(NI, Aux),
-	formarListaIguales(Xs, NI, T,[I|H]).
+	formarListaIguales(Xs, NI, [[H]|T],[I|Aux]).
 formarListaIguales([X|Xs],I,T,_) :-
 	NI is I+1,
 	formarListaIguales(Xs,NI,T,_).
 
+similJoin(Grid, [], NList, RGrids):-
+	gravity(Grid,NList,RGravity),
+	generate(RGravity,0,RGenerate),
+	RGrids = [Grid,RGravity,RGenerate].
+similJoin(Grid, [X|Xs], NL, RGrids):-
+	set_all_cero(Grid, X, Aux, 0),
+	add0s(Aux,0,NList),
+	similJoin(Aux, Xs,NList, RGrids).
+	
+
+
 booster(Grid, RGrid):-
-	formarListaIguales(Grid, 0, LoL,_).
+	formarListaIguales(Grid, 0, LoL,_),
+	similJoin(Grid, LoL, _, RGrid).
 
 %Lo que nos quedaria hacer ahora es, para cada lista en la LoL
 %	Simular un Join
@@ -201,11 +213,11 @@ booster(Grid, RGrid):-
 */
 
 join(Grid, _NumOfColumns, Path, RGrids):-
-	formarListaIguales(Grid,0,LoL,_),
 	set_all_cero(Grid,Path,Aux,0),
 	add0s(Aux,0,NList),
 	gravity(Aux,NList,RGravity),
 	generate(RGravity,0,RGenerate),
 	RGrids = [Aux,RGravity,RGenerate].
+
 
 %random/3
