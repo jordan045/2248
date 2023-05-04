@@ -8,70 +8,76 @@ replace([_|T], 0, X,[X|T]).
 replace([H|T], I, X, [H|R]):- I > -1, NI is I-1, replace(T, NI, X, R), !.
 replace(L, _, _, L).
 
-numi([X|[Y]],RIndex) :- RIndex is (X*5)+Y.
+% get_index(+Path,-RIndex)
+% Genera el índice en la lista a partir de un valor [X,Y]
+get_index([X|[Y]],RIndex) :- RIndex is (X*5)+Y.
 
-celda(Grid,[X|[Y]],Celda) :- %EXTRAE CELDA
-	numi([X|[Y]],RIndex),
-	nth0(RIndex,Grid,Celda).
+% get_value(+Grid,+Path,-Value)
+% Extrae el valor de una celda a partir de su valor [X,Y]
+get_value(Grid,[X|[Y]],Value) :- %EXTRAE CELDA
+	get_index([X|[Y]],RIndex),
+	nth0(RIndex,Grid,Value).
+
 
 resultado(SumaTotal, Mult, Bloque) :- 
 	SumaTotal =< Mult,
 	Bloque is Mult.
-	
 resultado(SumaTotal, Mult, Bloque)  :-
 	BloqueAux is Mult * 2,
 	resultado(SumaTotal, BloqueAux, Bloque).
 
 
-% set_all_cero(Grid,Path,RGrids) // podria no estar
-set_all_cero(Grid,[],Grid,SumaTotal).
-
-%eliminar este caso para hacerlo aparte
+% set_all_cero(+Grid,+Path,-RGrid,-SumaTotal)
+set_all_cero(Grid,[],Grid,_).
 set_all_cero(Grid,[P],RGrid,SumaTotal) :-
-	numi(P,RIndex),
-	celda(Grid,P,Valor),
+	get_index(P,RIndex),
+	get_value(Grid,P,Valor),
 	SumaTotalAux is SumaTotal + Valor,
 	resultado(SumaTotalAux, 1, Bloque),
 	replace(Grid, RIndex, Bloque, Aux),
 	set_all_cero(Aux,[],RGrid,SumaTotalAux).
-
 set_all_cero(Grid,[P|Ps],RGrid,SumaTotal):-
-	numi(P,RIndex),
-	celda(Grid,P,Valor),
+	get_index(P,RIndex),
+	get_value(Grid,P,Valor),
 	replace(Grid, RIndex, 0, Aux),
 	SumaTotalAux is SumaTotal + Valor,
 	set_all_cero(Aux,Ps,RGrid,SumaTotalAux).
 
-intercambiar(Grid,IndexA,IndexB,RGrid) :-
-	nth0(IndexA,Grid,Aux1),
-	nth0(IndexB,Grid,Aux2),
-	replace(Grid,IndexA,Aux2,AuxGrid),
-	replace(AuxGrid,IndexB,Aux1,RGrid).
+% swap(+Grid,+IndexA,+IndexB,-RGrid)
+% Intercambia dos celdas de Grid a partir de los índices, devuelve RGrid
+swap(Grid,IA,IB,RGrid) :-
+	nth0(IA,Grid,Aux1),
+	nth0(IB,Grid,Aux2),
+	replace(Grid,IA,Aux2,AuxGrid),
+	replace(AuxGrid,IB,Aux1,RGrid).
 
-
-% add0s(+Grid,-List)
-add0s([],40,List).
-add0s([0|T],I,[I|List]) :-
+% create_list_zeros(+Grid,+Index,-List)
+% Genera una lista que contiene los índices con valor cero en Grid
+create_list_zeros([],40,_).
+create_list_zeros([0|T],I,[I|List]) :-
 	NI is I+1,
-	add0s(T,NI,List).
-add0s([_|T],I,List) :-
+	create_list_zeros(T,NI,List).
+create_list_zeros([_|T],I,List) :-
 	NI is I+1,
-	add0s(T,NI,List).	
+	create_list_zeros(T,NI,List).	
 
-intercambio_recursivo(Grid,_,I,Grid) :-
+% recursive_swap(+Grid,+Value,+Index,RGrid)
+recursive_swap(Grid,_,I,Grid) :-
     I < 0.
-intercambio_recursivo(Grid,X,NI,RGrid) :-
-    intercambiar(Grid,X,NI,Aux),
+recursive_swap(Grid,X,NI,RGrid) :-
+    swap(Grid,X,NI,Aux),
 	NI2 is NI-5,
-	intercambio_recursivo(Aux,NI,NI2,RGrid).	
+	recursive_swap(Aux,NI,NI2,RGrid).	
 
-% gravity(Grid,List0,RGrid)
+% gravity(+Grid,+List0,-RGrid)
+% Intercambia recursivamente en la grilla para simular la gravedad
 gravity(Grid,[],Grid).
 gravity(Grid,[X|Xs],RGrid) :-
 	NI is X-5,
-	intercambio_recursivo(Grid,X,NI,RRGrid),
+	recursive_swap(Grid,X,NI,RRGrid),
 	gravity(RRGrid,Xs,RGrid).
 
+% generate(+List,+Index,-RList)
 generate([],40,[]).
 generate([0|T],I,[NewNumber|RGrid]) :-
 	NI is I+1,
@@ -82,13 +88,9 @@ generate([H|T],I,[H|RGrid]) :-
 	NI is I+1,
 	generate(T,NI,RGrid).
 
-sonIguales(Grid, I, X):-
+equal(Grid, I, X):-
 	nth0(I, Grid, V),
 	V is X.
-
-% formarListaIguales(+Grid, +Index, +Value -LoL)
-% Devuelve una lista de listas, donde cada una de ellas está formada por los indices
-% de los cubos adyacentes con igual valor
 
 check_up(I):-
 	I > 4.
@@ -101,123 +103,111 @@ check_right(I):-
 	Mod is I mod 5,
 	Mod =\= 4.
 
-checkearLista(I,[]).
-checkearLista(I, [X|Xs]):-
+check_adyacent(_,[]).
+check_adyacent(I, [X|Xs]):-
 	\+ X is I,
-	checkearLista(I,Xs).
+	check_adyacent(I,Xs).
 
 /*chequearLoL(I,[]).
 chequearLoL(I,[[X|H]|T]):-
 	chequearLoL(I,[X|H]).
 chequearLoL(I,[X|H]):-
-	checkearLista(I,[X|H]).*/
+	check_adyacent(I,[X|H]).*/
 
-formarListaIguales([],40,[],_).	
-formarListaIguales([X|Xs],I,[[I|H]|T],Aux):-
+create_list_booster([],40,[],_).	
+create_list_booster([X|Xs],I,[[I|H]|T],Aux):-
 	check_up(I),
 	check_left(I),
 	X > 0,
 	NI is I-6,
-	sonIguales([X|Xs],NI,X),
+	equal([X|Xs],NI,X),
 	%chequearLoL(I,[[H]|T]),
-	checkearLista(NI, Aux),
-	formarListaIguales(Xs, NI, [[H]|T],[I|Aux]).
-formarListaIguales([X|Xs],I,[[I|H]|T],Aux):-
+	check_adyacent(NI, Aux),
+	create_list_booster(Xs, NI, [[H]|T],[I|Aux]).
+create_list_booster([X|Xs],I,[[I|H]|T],Aux):-
 	check_up(I),
 	X > 0,
 	NI is I-5,
-	sonIguales([X|Xs],NI,X),
+	equal([X|Xs],NI,X),
 	%chequearLoL(I,[[H]|T]),
-	checkearLista(NI, Aux),
-	formarListaIguales(Xs, NI, [[H]|T],[I|Aux]).
-formarListaIguales([X|Xs],I,[[I|H]|T],Aux):-
+	check_adyacent(NI, Aux),
+	create_list_booster(Xs, NI, [[H]|T],[I|Aux]).
+create_list_booster([X|Xs],I,[[I|H]|T],Aux):-
 	check_right(I),
 	check_up(I),
 	X > 0,
 	NI is I-4,
-	sonIguales([X|Xs],NI,X),
+	equal([X|Xs],NI,X),
 	%chequearLoL(I,[[H]|T]),
-	checkearLista(NI, Aux),
-	formarListaIguales(Xs, NI, [[H]|T],[I|Aux]).
-formarListaIguales([X|Xs],I,[[I|H]|T],Aux):-
+	check_adyacent(NI, Aux),
+	create_list_booster(Xs, NI, [[H]|T],[I|Aux]).
+create_list_booster([X|Xs],I,[[I|H]|T],Aux):-
 	check_left(I),
 	X > 0,
 	NI is I-1,
-	sonIguales([X|Xs],NI,X),
+	equal([X|Xs],NI,X),
 	%chequearLoL(I,[[H]|T]),
-	checkearLista(NI, Aux),
-	formarListaIguales(Xs, NI, [[H]|T],[I|Aux]).
-formarListaIguales([X|Xs],I,[[I|H]|T],Aux):-
+	check_adyacent(NI, Aux),
+	create_list_booster(Xs, NI, [[H]|T],[I|Aux]).
+create_list_booster([X|Xs],I,[[I|H]|T],Aux):-
 	check_right(I),
 	X > 0,
 	NI is I+1,
-	sonIguales([X|Xs],NI,X),
+	equal([X|Xs],NI,X),
 	%chequearLoL(I,[[H]|T]),
-	checkearLista(NI, Aux),
-	formarListaIguales(Xs, NI, [[H]|T],[I|Aux]).
-formarListaIguales([X|Xs],I,[[I|H]|T],Aux):-
+	check_adyacent(NI, Aux),
+	create_list_booster(Xs, NI, [[H]|T],[I|Aux]).
+create_list_booster([X|Xs],I,[[I|H]|T],Aux):-
 	check_down(I),
 	check_left(I),
 	X > 0,
 	NI is I+4,
-	sonIguales([X|Xs],NI,X),
+	equal([X|Xs],NI,X),
 	%chequearLoL(I,[[H]|T]),
-	checkearLista(NI, Aux),
-	formarListaIguales(Xs, NI, [[H]|T],[I|Aux]).
-formarListaIguales([X|Xs],I,[[I|H]|T],Aux):-
+	check_adyacent(NI, Aux),
+	create_list_booster(Xs, NI, [[H]|T],[I|Aux]).
+create_list_booster([X|Xs],I,[[I|H]|T],Aux):-
 	check_down(I),
 	X > 0,
 	NI is I+5,
-	sonIguales([X|Xs],NI,X),
+	equal([X|Xs],NI,X),
 	%chequearLoL(I,[[H]|T]),
-	checkearLista(NI, Aux),
-	formarListaIguales(Xs, NI, [[H]|T],[I|Aux]).
-formarListaIguales([X|Xs],I,[[I|H]|T],Aux):-
+	check_adyacent(NI, Aux),
+	create_list_booster(Xs, NI, [[H]|T],[I|Aux]).
+create_list_booster([X|Xs],I,[[I|H]|T],Aux):-
 	check_down(I),
 	check_right(I),
 	X > 0,
 	NI is I+6,
-	sonIguales([X|Xs],NI,X),
+	equal([X|Xs],NI,X),
 	%chequearLoL(I,[[H]|T]),
-	checkearLista(NI, Aux),
-	formarListaIguales(Xs, NI, [[H]|T],[I|Aux]).
-formarListaIguales([X|Xs],I,T,_) :-
+	check_adyacent(NI, Aux),
+	create_list_booster(Xs, NI, [[H]|T],[I|Aux]).
+create_list_booster([_|Xs],I,T,_) :-
 	NI is I+1,
-	formarListaIguales(Xs,NI,T,_).
+	create_list_booster(Xs,NI,T,_).
 
-similJoin(Grid, [], NList, RGrids):-
+join_booster(Grid, [], NList, RGrids):-
 	gravity(Grid,NList,RGravity),
 	generate(RGravity,0,RGenerate),
 	RGrids = [Grid,RGravity,RGenerate].
-similJoin(Grid, [X|Xs], NL, RGrids):-
+join_booster(Grid, [X|Xs], NList, RGrids):-
 	set_all_cero(Grid, X, Aux, 0),
-	add0s(Aux,0,NList),
-	similJoin(Aux, Xs,NList, RGrids).
-	
-
+	create_list_zeros(Aux,0,NList),
+	join_booster(Aux, Xs,NList, RGrids).
 
 booster(Grid, RGrid):-
-	formarListaIguales(Grid, 0, LoL,_),
-	similJoin(Grid, LoL, _, RGrid).
-
-%Lo que nos quedaria hacer ahora es, para cada lista en la LoL
-%	Simular un Join
-%	Vamos vaciando la LoL, llamando a Set_all_cero (path = cabeza de LoL) y a add0s
-%	Una vez hecho esto, aplicamos gravedad y generamos nuevos bloques.
-	
-
-/*
--6 -5 -4
--1  * +1
- 4  5  6
-*/
+	create_list_booster(Grid, 0, LoL,_),
+	join_booster(Grid, LoL, _, RGrid).
 
 join(Grid, _NumOfColumns, Path, RGrids):-
 	set_all_cero(Grid,Path,Aux,0),
-	add0s(Aux,0,NList),
+	create_list_zeros(Aux,0,NList),
 	gravity(Aux,NList,RGravity),
 	generate(RGravity,0,RGenerate),
 	RGrids = [Aux,RGravity,RGenerate].
 
-
-%random/3
+/* 
+trace,
+create_list_booster([64,64,64,64,64,64,4,4,4,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64],0,LoL,_).
+ */
