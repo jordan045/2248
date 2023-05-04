@@ -88,9 +88,10 @@ generate([H|T],I,[H|RGrid]) :-
 	NI is I+1,
 	generate(T,NI,RGrid).
 
-equal(Grid, I, X):-
-	nth0(I, Grid, V),
-	V is X.
+equal(Grid, NI, I):-
+	nth0(NI, Grid, V),
+	nth0(I, Grid, Z),
+	V is Z.
 
 check_up(I):-
 	I > 4.
@@ -125,72 +126,98 @@ chequearLoL(I,[X|H]):-
 create2() */
 
 not_member(_, []) :- !.
-
 not_member(X, [Head|Tail]) :-
      X \= Head,
     not_member(X, Tail).
 
-create_list_booster([],40,_,_).	
-create_list_booster([X|Xs],I,_List,Ady):-
+
+findall(NewIndex,(member(X,[-6,-5,-4,-1,1,4,5,6]), NewIndex is X+Index),Rta).
+
+adyacent(Grid,Index,Ady) :-
+	findall(NewIndex,(member(X,[-6,-5,-4,-1,1,4,5,6]), NewIndex is X+Index, equal(Grid,NewIndex,X), check(NewIndex)),Ady),
+
+check(NewIndex) :-
+	check_down(NewIndex),
+	check_left(NewIndex),
+	check_right(NewIndex),
+	check_up(NewIndex),
+
+create_list_booster([X|Xs],asdfasd) :-
+	findall(X, adyacent(Grid,X,I), Ady),
+
+
+
+
+create_list_booster(_,40,_,_,_).	
+create_list_booster(Grid,I,_List,AllList,Ady):-
 	check_up(I),
 	check_left(I),
 	NI is I-6,
-	equal([X|Xs],NI,X),
+	equal(Grid,NI,I),
 	not_member(NI,Ady),
-	create_list_booster([X|Xs], NI, List,[I|Ady]).
-create_list_booster([X|Xs],I,_List,Ady):-
+	not_member(NI,AllList),
+	create_list_booster(Grid, NI, List,AllList,[I|Ady]).
+create_list_booster(Grid,I,_List,AllList,Ady):-
 	check_up(I),
 	NI is I-5,
-	equal([X|Xs],NI,X),
+	equal(Grid,NI,I),
 	not_member(NI,Ady),
-	create_list_booster([X|Xs], NI, List,[I|Ady]).
-create_list_booster([X|Xs],I,_List,Ady):-
+	not_member(NI,AllList),
+	create_list_booster(Grid, NI, List,AllList,[I|Ady]).
+create_list_booster(Grid,I,_List,AllList,Ady):-
 	check_up(I),
 	check_right(I),
 	NI is I-4,
-	equal([X|Xs],NI,X),
+	equal(Grid,NI,I),
 	not_member(NI,Ady),
-	create_list_booster([X|Xs], NI, List,[I|Ady]).
-create_list_booster([X|Xs],I,_List,Ady):-
+	not_member(NI,AllList),
+	create_list_booster(Grid, NI, List,AllList,[I|Ady]).
+create_list_booster(Grid,I,_List,AllList,Ady):-
 	check_left(I),
 	NI is I-1,
-	equal([X|Xs],NI,X),
+	equal(Grid,NI,I),
 	not_member(NI,Ady),
-	create_list_booster([X|Xs], NI, List,[I|Ady]).
-create_list_booster([X|Xs],I,_List,Ady):-
+	not_member(NI,AllList),
+	create_list_booster(Grid, NI, List,AllList,[I|Ady]).
+create_list_booster(Grid,I,_List,AllList,Ady):-
 	check_right(I),
 	NI is I+1,
-	equal([X|Xs],NI,X),
+	equal(Grid,NI,I),
 	not_member(NI,Ady),
-	create_list_booster([X|Xs], NI, List,[I|Ady]).
-create_list_booster([X|Xs],I,_List,Ady):-
+	not_member(NI,AllList),
+	create_list_booster(Grid, NI, List,AllList,[I|Ady]).
+create_list_booster(Grid,I,_List,AllList,Ady):-
 	check_left(I),
 	check_down(I),
 	NI is I+4,
-	equal([X|Xs],NI,X),
+	equal(Grid,NI,I),
 	not_member(NI,Ady),
-	create_list_booster([X|Xs], NI, List,[I|Ady]).
-create_list_booster([X|Xs],I,_List,Ady):-
+	not_member(NI,AllList),
+	create_list_booster(Grid, NI, List,AllList,[I|Ady]).
+create_list_booster(Grid,I,_List,AllList,Ady):-
 	check_down(I),
 	NI is I+5,
-	equal([X|Xs],NI,X),
+	equal(Grid,NI,I),
 	not_member(NI,Ady),
-	create_list_booster([X|Xs], NI, List,[I|Ady]).
-create_list_booster([X|Xs],I,_List,Ady):-
+	not_member(NI,AllList),
+	create_list_booster(Grid, NI, List,AllList,[I|Ady]).
+create_list_booster(Grid,I,_List,AllList,Ady):-
 	check_right(I),
 	check_down(I),
 	NI is I+6,
-	equal([X|Xs],NI,X),
+	equal(Grid,NI,I),
 	not_member(NI,Ady),
-	create_list_booster([X|Xs], NI, List,[I|Ady]).
-create_list_booster([_|Xs],I,List,[]) :- % llegaste al final y tenes la Ady vacía, solo volvemos y seguimos
-	NI is I-4,
-	create_list_booster(Xs,NI,List,[]).
-create_list_booster([_|Xs],I,List,[Y|Ys]) :- % llegaste al final y tenes algo en la Ady, metes eso en la Lista y seguis
-	
-	append(List,[Y|Ys],RList),
-	NI is I-4,
-	create_list_booster(Xs,NI,RList,[]).
+	not_member(NI,AllList),
+	create_list_booster(Grid, NI, List,AllList,[I|Ady]).
+create_list_booster(Grid,I,List,AllList,[]) :- % llegaste al final y tenes la Ady vacía, solo volvemos y seguimos
+	NI is I-5,
+	create_list_booster(Grid,NI,List,AllList,[]).
+create_list_booster(Grid,I,[Ady|Ls],AllList,[Y|Ys]) :- % llegaste al final y tenes algo en la Ady, metes eso en la Lista y seguis	
+	append([I],[Y|Ys],Ady),
+	append(List,Ady,RList),
+	last([Y|Ys],Last),
+	NI is Last+1,
+	create_list_booster(Grid,NI,Ls,RList,[]).
 
 join_booster(Grid, [], NList, RGrids):-
 	gravity(Grid,NList,RGravity),
