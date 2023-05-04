@@ -105,7 +105,7 @@ check_right(I):-
 
 check_adyacent(_,[]).
 check_adyacent(I, [X|Xs]):-
-	\+ X is I,
+	X =\= I,
 	check_adyacent(I,Xs).
 
 /*chequearLoL(I,[]).
@@ -113,79 +113,84 @@ chequearLoL(I,[[X|H]|T]):-
 	chequearLoL(I,[X|H]).
 chequearLoL(I,[X|H]):-
 	check_adyacent(I,[X|H]).*/
+	
+/* create_list_booster([X|Xs],I,[[I|H]|T],Ady):-
+	findall(NewIndex,(member(OS,[-6,-5,-4,-1,1,4,5,6]), NewIndex is OS+I),[NI|NIs]),
+	check_up(NI),
+	check_left(NI),
+	equal([X|Xs],NI,X),
+	check_adyacent(NI, Ady),
+	create_list_booster(Xs, NI,T,[I|Ady]).
 
-create_list_booster([],40,[],_).	
-create_list_booster([X|Xs],I,[[I|H]|T],Aux):-
+create2() */
+
+not_member(_, []) :- !.
+
+not_member(X, [Head|Tail]) :-
+     X \= Head,
+    not_member(X, Tail).
+
+create_list_booster([],40,_,_).	
+create_list_booster([X|Xs],I,_List,Ady):-
 	check_up(I),
 	check_left(I),
-	X > 0,
 	NI is I-6,
 	equal([X|Xs],NI,X),
-	%chequearLoL(I,[[H]|T]),
-	check_adyacent(NI, Aux),
-	create_list_booster(Xs, NI, [[H]|T],[I|Aux]).
-create_list_booster([X|Xs],I,[[I|H]|T],Aux):-
+	not_member(NI,Ady),
+	create_list_booster([X|Xs], NI, List,[I|Ady]).
+create_list_booster([X|Xs],I,_List,Ady):-
 	check_up(I),
-	X > 0,
 	NI is I-5,
 	equal([X|Xs],NI,X),
-	%chequearLoL(I,[[H]|T]),
-	check_adyacent(NI, Aux),
-	create_list_booster(Xs, NI, [[H]|T],[I|Aux]).
-create_list_booster([X|Xs],I,[[I|H]|T],Aux):-
-	check_right(I),
+	not_member(NI,Ady),
+	create_list_booster([X|Xs], NI, List,[I|Ady]).
+create_list_booster([X|Xs],I,_List,Ady):-
 	check_up(I),
-	X > 0,
+	check_right(I),
 	NI is I-4,
 	equal([X|Xs],NI,X),
-	%chequearLoL(I,[[H]|T]),
-	check_adyacent(NI, Aux),
-	create_list_booster(Xs, NI, [[H]|T],[I|Aux]).
-create_list_booster([X|Xs],I,[[I|H]|T],Aux):-
+	not_member(NI,Ady),
+	create_list_booster([X|Xs], NI, List,[I|Ady]).
+create_list_booster([X|Xs],I,_List,Ady):-
 	check_left(I),
-	X > 0,
 	NI is I-1,
 	equal([X|Xs],NI,X),
-	%chequearLoL(I,[[H]|T]),
-	check_adyacent(NI, Aux),
-	create_list_booster(Xs, NI, [[H]|T],[I|Aux]).
-create_list_booster([X|Xs],I,[[I|H]|T],Aux):-
+	not_member(NI,Ady),
+	create_list_booster([X|Xs], NI, List,[I|Ady]).
+create_list_booster([X|Xs],I,_List,Ady):-
 	check_right(I),
-	X > 0,
 	NI is I+1,
 	equal([X|Xs],NI,X),
-	%chequearLoL(I,[[H]|T]),
-	check_adyacent(NI, Aux),
-	create_list_booster(Xs, NI, [[H]|T],[I|Aux]).
-create_list_booster([X|Xs],I,[[I|H]|T],Aux):-
-	check_down(I),
+	not_member(NI,Ady),
+	create_list_booster([X|Xs], NI, List,[I|Ady]).
+create_list_booster([X|Xs],I,_List,Ady):-
 	check_left(I),
-	X > 0,
+	check_down(I),
 	NI is I+4,
 	equal([X|Xs],NI,X),
-	%chequearLoL(I,[[H]|T]),
-	check_adyacent(NI, Aux),
-	create_list_booster(Xs, NI, [[H]|T],[I|Aux]).
-create_list_booster([X|Xs],I,[[I|H]|T],Aux):-
+	not_member(NI,Ady),
+	create_list_booster([X|Xs], NI, List,[I|Ady]).
+create_list_booster([X|Xs],I,_List,Ady):-
 	check_down(I),
-	X > 0,
 	NI is I+5,
 	equal([X|Xs],NI,X),
-	%chequearLoL(I,[[H]|T]),
-	check_adyacent(NI, Aux),
-	create_list_booster(Xs, NI, [[H]|T],[I|Aux]).
-create_list_booster([X|Xs],I,[[I|H]|T],Aux):-
-	check_down(I),
+	not_member(NI,Ady),
+	create_list_booster([X|Xs], NI, List,[I|Ady]).
+create_list_booster([X|Xs],I,_List,Ady):-
 	check_right(I),
-	X > 0,
+	check_down(I),
 	NI is I+6,
 	equal([X|Xs],NI,X),
-	%chequearLoL(I,[[H]|T]),
-	check_adyacent(NI, Aux),
-	create_list_booster(Xs, NI, [[H]|T],[I|Aux]).
-create_list_booster([_|Xs],I,T,_) :-
-	NI is I+1,
-	create_list_booster(Xs,NI,T,_).
+	not_member(NI,Ady),
+	create_list_booster([X|Xs], NI, List,[I|Ady]).
+create_list_booster([_|Xs],I,List,[]) :- % llegaste al final y tenes la Ady vacía, solo volvemos y seguimos
+	NI is I-4,
+	create_list_booster(Xs,NI,List,[]).
+create_list_booster([_|Xs],I,List,[Y|Ys]) :- % llegaste al final y tenes algo en la Ady, metes eso en la Lista y seguis
+	
+	append(List,[Y|Ys],RList),
+	NI is I-4,
+	create_list_booster(Xs,NI,RList,[]).
 
 join_booster(Grid, [], NList, RGrids):-
 	gravity(Grid,NList,RGravity),
