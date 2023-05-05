@@ -93,61 +93,78 @@ equal(Grid, NI, I):-
 	nth0(I, Grid, Z),
 	V is Z.
 
-check_up(I):-
-	I > 4.
-check_down(I):-
-	I < 35.
-check_left(I):-
-	Mod is I mod 5,
-	Mod =\= 0.
-check_right(I):-
-	Mod is I mod 5,
-	Mod =\= 4.
+
 
 check_adyacent(_,[]).
 check_adyacent(I, [X|Xs]):-
 	X =\= I,
 	check_adyacent(I,Xs).
 
-/*chequearLoL(I,[]).
-chequearLoL(I,[[X|H]|T]):-
-	chequearLoL(I,[X|H]).
-chequearLoL(I,[X|H]):-
-	check_adyacent(I,[X|H]).*/
-	
-/* create_list_booster([X|Xs],I,[[I|H]|T],Ady):-
-	findall(NewIndex,(member(OS,[-6,-5,-4,-1,1,4,5,6]), NewIndex is OS+I),[NI|NIs]),
-	check_up(NI),
-	check_left(NI),
-	equal([X|Xs],NI,X),
-	check_adyacent(NI, Ady),
-	create_list_booster(Xs, NI,T,[I|Ady]).
-
-create2() */
-
-not_member(_, []) :- !.
+not_member(_, []).
 not_member(X, [Head|Tail]) :-
      X \= Head,
     not_member(X, Tail).
 
+% Primero tendremos un metodo shell que ira consumiendo la lista
+% El método recursivo irá pidiendo todas las adyacencias
 
-%findall(NewIndex,(member(X,[-6,-5,-4,-1,1,4,5,6]), NewIndex is X+Index),Rta).
+check_up(I,[-6,-5,-4]) :- I < 5.
+check_up(I,[]) :- 		  I > 4.
 
-/*adyacent(Grid,Index,Ady) :-
-	findall(NewIndex,(member(X,[-6,-5,-4,-1,1,4,5,6]), NewIndex is X+Index, equal(Grid,NewIndex,X), check(NewIndex)),Ady),
+check_down(I,[]):-          I < 35.
+check_down(I,[4,5,6]):-  	I > 34.
 
-check(NewIndex) :-
-	check_down(NewIndex),
-	check_left(NewIndex),
-	check_right(NewIndex),
-	check_up(NewIndex),
+check_left(I,[]):-        Mod is I mod 5, Mod =\= 0.
+check_left(I,[-6,-1,4]):- Mod is I mod 5, Mod is 0.
 
-create_list_booster([X|Xs],asdfasd) :-
-	findall(X, adyacent(Grid,X,I), Ady),
+check_right(I,[]):-       Mod is I mod 5, Mod =\= 4.
+check_right(I,[-4,1,6]):- Mod is I mod 5, Mod is 4.
 
+possible(Index,List) :-
+	AllList = [-6,-5,-4,-1,1,4,5,6],
+	check_up(Index,LU),    
+	check_down(Index,LD),  
+	check_right(Index,LR), 
+	check_left(Index,LL),  
+	union(LU,LD,Aux),
+	union(Aux,LR,Aux2),
+	union(Aux2,LL,NList),
+	subtract(AllList,NList,List).
 
-*/
+possible_shell(_Grid,[],_NAdy).
+possible_shell(Grid,[X|Xs],NAdy):-
+	possible(X,NPossible),
+	moves(Grid,X,NAdy,NPossible,_RAdy),
+	possible_shell(Grid,Xs,NAdy).
 
+conditional_union(_,_,[],[]).
+conditional_union(Ady,Index,_AuxAdy,Moves) :-
+    union(Ady,[Index],Moves).
+
+% list_booster(Grid,Grid,0,[],LoL)
+% list_booster(+Grid,+GridConsume,Index,Ady,LoL)
+list_booster(_Grid,[],_I,_Ady,_LoL).
+list_booster(Grid,[X|Xs],I,Ady,[Ady|LoL]) :-
+	possible(I,Possible),
+	moves(Grid,I,Ady,Possible,RAdy),
+	NI is I+1,
+	list_booster(Grid,Xs,NI,RAdy,LoL).
+
+moves(_Grid,Index,Ady,[],_RAdy) :-
+	append(Ady,I,RAdy),
+	Ady = RAdy.
+moves(Grid,Index,Ady,Possible,RAdy) :-
+	%append a lista de adyacencia si es igual y no está en la lista
+	findall(NI,(member(X,Possible),			
+				NI is X+Index, 
+				equal(Grid,NI,Index), 
+				not_member(NI,Ady)),AuxAdy),
+    conditional_union(Ady,Index,AuxAdy,Moves),
+	union(Moves,AuxAdy,QUEBRONCALOCO), %ojo que agrega listas vacias
+	possible_shell(Grid,AuxAdy,QUEBRONCALOCO),
+    RAdy = QUEBRONCALOCO.
+
+/*
 create_list_booster(_,40,_,_,_).	
 create_list_booster(Grid,I,_List,AllList,Ady):-
 	check_up(I),
@@ -218,6 +235,7 @@ create_list_booster(Grid,I,[Ady|Ls],AllList,[Y|Ys]) :- % llegaste al final y ten
 	last([Y|Ys],Last),
 	NI is Last+1,
 	create_list_booster(Grid,NI,Ls,RList,[]).
+*/
 
 join_booster(Grid, [], NList, RGrids):-
 	gravity(Grid,NList,RGravity),
