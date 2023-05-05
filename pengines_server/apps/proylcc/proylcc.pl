@@ -131,9 +131,9 @@ not_member(X, [Head|Tail]) :-
     not_member(X, Tail).
 
 
-findall(NewIndex,(member(X,[-6,-5,-4,-1,1,4,5,6]), NewIndex is X+Index),Rta).
+%findall(NewIndex,(member(X,[-6,-5,-4,-1,1,4,5,6]), NewIndex is X+Index),Rta).
 
-adyacent(Grid,Index,Ady) :-
+/*adyacent(Grid,Index,Ady) :-
 	findall(NewIndex,(member(X,[-6,-5,-4,-1,1,4,5,6]), NewIndex is X+Index, equal(Grid,NewIndex,X), check(NewIndex)),Ady),
 
 check(NewIndex) :-
@@ -146,7 +146,7 @@ create_list_booster([X|Xs],asdfasd) :-
 	findall(X, adyacent(Grid,X,I), Ady),
 
 
-
+*/
 
 create_list_booster(_,40,_,_,_).	
 create_list_booster(Grid,I,_List,AllList,Ady):-

@@ -44,7 +44,7 @@ function Game() {
       return;
     }
     setPath(newPath);
-    setTempScore(score + joinResult(path, grid, numOfColumns));
+    setTempScore(score + joinResult(newPath, grid, numOfColumns));
     console.log(JSON.stringify(newPath));
   }
 
