@@ -127,7 +127,7 @@ possible(Index,List) :-
 possible_shell(_Grid,[],_Visited,_NAdy).
 possible_shell(Grid,[X|Xs],Visited,NAdy):-
 	possible(X,NPossible),
-	moves(Grid,X,NAdy,NPossible,Visited,_RAdy),
+	moves(Grid,X,NAdy,NPossible,Visited,RAdy),
 	possible_shell(Grid,Xs,Visited,NAdy).
 
 conditional_union(_,_,[],[]).
@@ -161,89 +161,30 @@ moves(Grid,Index,Ady,Possible,Visited,RAdy) :-
 				NI is X+Index, 
 				equal(Grid,NI,Index), 
 				not_member(NI,Ady),
-                   not_member(NI,Visited)),AuxAdy),
+                not_member(NI,Visited)),AuxAdy),
     conditional_union(Ady,Index,AuxAdy,Moves),
 	conditional_union_void(Grid,Moves,AuxAdy,Visited,RAdy).
 
-/*
-create_list_booster(_,40,_,_,_).	
-create_list_booster(Grid,I,_List,AllList,Ady):-
-	check_up(I),
-	check_left(I),
-	NI is I-6,
-	equal(Grid,NI,I),
-	not_member(NI,Ady),
-	not_member(NI,AllList),
-	create_list_booster(Grid, NI, List,AllList,[I|Ady]).
-create_list_booster(Grid,I,_List,AllList,Ady):-
-	check_up(I),
-	NI is I-5,
-	equal(Grid,NI,I),
-	not_member(NI,Ady),
-	not_member(NI,AllList),
-	create_list_booster(Grid, NI, List,AllList,[I|Ady]).
-create_list_booster(Grid,I,_List,AllList,Ady):-
-	check_up(I),
-	check_right(I),
-	NI is I-4,
-	equal(Grid,NI,I),
-	not_member(NI,Ady),
-	not_member(NI,AllList),
-	create_list_booster(Grid, NI, List,AllList,[I|Ady]).
-create_list_booster(Grid,I,_List,AllList,Ady):-
-	check_left(I),
-	NI is I-1,
-	equal(Grid,NI,I),
-	not_member(NI,Ady),
-	not_member(NI,AllList),
-	create_list_booster(Grid, NI, List,AllList,[I|Ady]).
-create_list_booster(Grid,I,_List,AllList,Ady):-
-	check_right(I),
-	NI is I+1,
-	equal(Grid,NI,I),
-	not_member(NI,Ady),
-	not_member(NI,AllList),
-	create_list_booster(Grid, NI, List,AllList,[I|Ady]).
-create_list_booster(Grid,I,_List,AllList,Ady):-
-	check_left(I),
-	check_down(I),
-	NI is I+4,
-	equal(Grid,NI,I),
-	not_member(NI,Ady),
-	not_member(NI,AllList),
-	create_list_booster(Grid, NI, List,AllList,[I|Ady]).
-create_list_booster(Grid,I,_List,AllList,Ady):-
-	check_down(I),
-	NI is I+5,
-	equal(Grid,NI,I),
-	not_member(NI,Ady),
-	not_member(NI,AllList),
-	create_list_booster(Grid, NI, List,AllList,[I|Ady]).
-create_list_booster(Grid,I,_List,AllList,Ady):-
-	check_right(I),
-	check_down(I),
-	NI is I+6,
-	equal(Grid,NI,I),
-	not_member(NI,Ady),
-	not_member(NI,AllList),
-	create_list_booster(Grid, NI, List,AllList,[I|Ady]).
-create_list_booster(Grid,I,List,AllList,[]) :- % llegaste al final y tenes la Ady vacía, solo volvemos y seguimos
-	NI is I-5,
-	create_list_booster(Grid,NI,List,AllList,[]).
-create_list_booster(Grid,I,[Ady|Ls],AllList,[Y|Ys]) :- % llegaste al final y tenes algo en la Ady, metes eso en la Lista y seguis	
-	append([I],[Y|Ys],Ady),
-	append(List,Ady,RList),
-	last([Y|Ys],Last),
-	NI is Last+1,
-	create_list_booster(Grid,NI,Ls,RList,[]).
-*/
+% set_all_cero_booster(+Grid,+Path,-RGrid,-SumaTotal)
+set_all_cero_booster(Grid,[],Grid,_).
+set_all_cero_booster(Grid,[P],RGrid,SumaTotal) :-
+	nth0(P,Grid,Value),
+	SumaTotalAux is SumaTotal + Value,
+	resultado(SumaTotalAux, 1, Bloque),
+	replace(Grid, P, Bloque, Aux),
+	set_all_cero_booster(Aux,[],RGrid,SumaTotalAux).
+set_all_cero_booster(Grid,[P|Ps],RGrid,SumaTotal):-
+	nth0(P,Grid,Value),
+	replace(Grid, P, 0, Aux),
+	SumaTotalAux is SumaTotal + Value,
+	set_all_cero_booster(Aux,Ps,RGrid,SumaTotalAux).
 
 join_booster(Grid, [], NList, RGrids):-
 	gravity(Grid,NList,RGravity),
 	generate(RGravity,0,RGenerate),
 	RGrids = [Grid,RGravity,RGenerate].
 join_booster(Grid, [X|Xs], NList, RGrids):-
-	set_all_cero(Grid, X, Aux, 0),
+	set_all_cero_booster(Grid, X, Aux, 0),
 	create_list_zeros(Aux,0,NList),
 	join_booster(Aux, Xs,NList, RGrids).
 

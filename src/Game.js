@@ -93,7 +93,9 @@ function Game() {
     setWaiting(true);
     pengine.query(queryS, (success, response) => {
       if (success) {
+        console.log('done');
         animateEffect(response['RGrids']);
+        console.log(response['RGrids']);
       } else {
         setWaiting(false);
       }
