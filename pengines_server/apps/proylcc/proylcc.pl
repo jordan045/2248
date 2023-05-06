@@ -93,13 +93,6 @@ equal(Grid, NI, I):-
 	nth0(I, Grid, Z),
 	V is Z.
 
-
-
-check_adyacent(_,[]).
-check_adyacent(I, [X|Xs]):-
-	X =\= I,
-	check_adyacent(I,Xs).
-
 not_member(_, []).
 not_member(X, [Head|Tail]) :-
      X \= Head,
@@ -131,38 +124,46 @@ possible(Index,List) :-
 	union(Aux2,LL,NList),
 	subtract(AllList,NList,List).
 
-possible_shell(_Grid,[],_NAdy).
-possible_shell(Grid,[X|Xs],NAdy):-
+possible_shell(_Grid,[],_Visited,_NAdy).
+possible_shell(Grid,[X|Xs],Visited,NAdy):-
 	possible(X,NPossible),
-	moves(Grid,X,NAdy,NPossible,_RAdy),
-	possible_shell(Grid,Xs,NAdy).
+	moves(Grid,X,NAdy,NPossible,Visited,_RAdy),
+	possible_shell(Grid,Xs,Visited,NAdy).
 
 conditional_union(_,_,[],[]).
 conditional_union(Ady,Index,_AuxAdy,Moves) :-
     union(Ady,[Index],Moves).
 
+conditional_union_void(_,Moves,[],_Visited,Moves).
+conditional_union_void(Grid,Moves,AuxAdy,Visited,RAdy) :-
+    union(Moves,AuxAdy,RAdy),
+	possible_shell(Grid,AuxAdy,Visited,RAdy).
+
 % list_booster(Grid,Grid,0,[],LoL)
 % list_booster(+Grid,+GridConsume,Index,Ady,LoL)
-list_booster(_Grid,[],_I,_Ady,_LoL).
-list_booster(Grid,[X|Xs],I,Ady,[Ady|LoL]) :-
+list_booster(_Grid,[],_I,_Ady,_Visited,[]).
+list_booster(Grid,[_X|Xs],I,[],Visited,LoL) :-
 	possible(I,Possible),
-	moves(Grid,I,Ady,Possible,RAdy),
+	moves(Grid,I,[],Possible,Visited,RAdy),
+    union(RAdy,Visited,VisitedAUX),
 	NI is I+1,
-	list_booster(Grid,Xs,NI,RAdy,LoL).
+	list_booster(Grid,Xs,NI,RAdy,VisitedAUX,LoL).
+list_booster(Grid,[_X|Xs],I,Ady,Visited,[Ady|LoL]) :-
+	possible(I,Possible),
+	moves(Grid,I,Ady,Possible,Visited,RAdy),
+	union(RAdy,Visited,VisitedAUX),
+	NI is I+1,
+	list_booster(Grid,Xs,NI,[],VisitedAUX,LoL).
 
-moves(_Grid,Index,Ady,[],_RAdy) :-
-	append(Ady,I,RAdy),
-	Ady = RAdy.
-moves(Grid,Index,Ady,Possible,RAdy) :-
+moves(Grid,Index,Ady,Possible,Visited,RAdy) :-
 	%append a lista de adyacencia si es igual y no está en la lista
 	findall(NI,(member(X,Possible),			
 				NI is X+Index, 
 				equal(Grid,NI,Index), 
-				not_member(NI,Ady)),AuxAdy),
+				not_member(NI,Ady),
+                   not_member(NI,Visited)),AuxAdy),
     conditional_union(Ady,Index,AuxAdy,Moves),
-	union(Moves,AuxAdy,QUEBRONCALOCO), %ojo que agrega listas vacias
-	possible_shell(Grid,AuxAdy,QUEBRONCALOCO),
-    RAdy = QUEBRONCALOCO.
+	conditional_union_void(Grid,Moves,AuxAdy,Visited,RAdy).
 
 /*
 create_list_booster(_,40,_,_,_).	
@@ -247,7 +248,7 @@ join_booster(Grid, [X|Xs], NList, RGrids):-
 	join_booster(Aux, Xs,NList, RGrids).
 
 booster(Grid, RGrid):-
-	create_list_booster(Grid, 0, LoL,_),
+	list_booster(Grid,Grid,0,[],[],LoL),
 	join_booster(Grid, LoL, _, RGrid).
 
 join(Grid, _NumOfColumns, Path, RGrids):-
