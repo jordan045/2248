@@ -113,7 +113,9 @@ check_left(I,[-6,-1,4]):- Mod is I mod 5, Mod is 0.
 check_right(I,[]):-       Mod is I mod 5, Mod =\= 4.
 check_right(I,[-4,1,6]):- Mod is I mod 5, Mod is 4.
 
-possible(Index,List) :-
+% valid_moves(+Index,-List)
+% True cuando List es una lista conteniendo los índices relativos válidos a la grilla para Index
+valid_moves(Index,List) :-
 	AllList = [-6,-5,-4,-1,1,4,5,6],
 	check_up(Index,LU),    
 	check_down(Index,LD),  
@@ -124,46 +126,62 @@ possible(Index,List) :-
 	union(Aux2,LL,NList),
 	subtract(AllList,NList,List).
 
-possible_shell(_Grid,[],_Visited,_NAdy).
-possible_shell(Grid,[X|Xs],Visited,NAdy):-
-	possible(X,NPossible),
-	moves(Grid,X,NAdy,NPossible,Visited,RAdy),
-	possible_shell(Grid,Xs,Visited,NAdy).
 
-conditional_union(_,_,[],[]).
-conditional_union(Ady,Index,_AuxAdy,Moves) :-
+
+% add_index(+Ady,+Index,+AuxAdy,-Moves)
+% Agrega el indice actual a la lista de adyacencia si el findall no es vacío
+add_index(Ady,_,[],Ady).
+add_index(Ady,Index,_AuxAdy,Moves) :-
     union(Ady,[Index],Moves).
 
-conditional_union_void(_,Moves,[],_Visited,Moves).
-conditional_union_void(Grid,Moves,AuxAdy,Visited,RAdy) :-
+merge_adys(_Grid,Moves,[],_Visited,Moves).
+merge_adys(Grid,Moves,AuxAdy,Visited,RAdy) :-
     union(Moves,AuxAdy,RAdy),
-	possible_shell(Grid,AuxAdy,Visited,RAdy).
+	recursive_find(Grid,AuxAdy,Visited,RAdy).
+
+% Realiza la recursión de find_adyacencies
+recursive_find(_Grid,[],_Visited,[]).
+recursive_find(Grid,[X|Xs],Visited,RAdy):-
+	valid_moves(X,Possible),
+	find_adyacencies(Grid,X,[X|Xs],Possible,Visited,NewAdy),
+	recursive_find(Grid,Xs,Visited,RRAdy),
+	union(RRAdy,NewAdy,RAdy).
+
+% find_adyacencies(+Grid,+Index,+Ady,+Possible,+Visited,-RAdy)
+% - Grid: La grilla del juego
+% - Index: El índice sobre el cual se buscaran adyacencias válidas
+% - Ady: La lista de adyacencia local
+% - Possible: La lista con las jugadas válidas para el indice actual
+% - Visited: La lista con todos los elementos visitados hasta el momento
+% - RAdy: La nueva lista de adyacencia local
+find_adyacencies(Grid,Index,Ady,Possible,Visited,RAdy) :-
+	findall(NI,(member(X,Possible),			
+				NI is X+Index, 
+				equal(Grid,NI,Index), 
+				not_member(NI,Ady),
+				not_member(NI,Visited)),Found),
+	add_index(Ady,Index,Found,ActualSet),
+    union(ActualSet,Visited,VisitedAux),
+    recursive_find(Grid,Found,VisitedAux,RAdy).
+    /*¨union(ActualSet,NewAdy,RAdy). */
+	/*merge_adys(Grid,ActualSet,Found,Visited,RAdy).*/
 
 % list_booster(Grid,Grid,0,[],LoL)
 % list_booster(+Grid,+GridConsume,Index,Ady,LoL)
 list_booster(_Grid,[],_I,_Ady,_Visited,[]).
 list_booster(Grid,[_X|Xs],I,[],Visited,LoL) :-
-	possible(I,Possible),
-	moves(Grid,I,[],Possible,Visited,RAdy),
-    union(RAdy,Visited,VisitedAUX),
+	valid_moves(I,Possible),
+	find_adyacencies(Grid,I,[],Possible,Visited,RAdy),
+    union(RAdy,Visited,VisitedAux),
 	NI is I+1,
-	list_booster(Grid,Xs,NI,RAdy,VisitedAUX,LoL).
+	list_booster(Grid,Xs,NI,[],VisitedAux,LoL).
 list_booster(Grid,[_X|Xs],I,Ady,Visited,[Ady|LoL]) :-
-	possible(I,Possible),
-	moves(Grid,I,Ady,Possible,Visited,RAdy),
-	union(RAdy,Visited,VisitedAUX),
+	valid_moves(I,Possible),
+	find_adyacencies(Grid,I,Ady,Possible,Visited,RAdy),
+    union(RAdy,Visited,VisitedAux),
 	NI is I+1,
-	list_booster(Grid,Xs,NI,[],VisitedAUX,LoL).
+	list_booster(Grid,Xs,NI,[],VisitedAux,LoL).
 
-moves(Grid,Index,Ady,Possible,Visited,RAdy) :-
-	%append a lista de adyacencia si es igual y no está en la lista
-	findall(NI,(member(X,Possible),			
-				NI is X+Index, 
-				equal(Grid,NI,Index), 
-				not_member(NI,Ady),
-                not_member(NI,Visited)),AuxAdy),
-    conditional_union(Ady,Index,AuxAdy,Moves),
-	conditional_union_void(Grid,Moves,AuxAdy,Visited,RAdy).
 
 % set_all_cero_booster(+Grid,+Path,-RGrid,-SumaTotal)
 set_all_cero_booster(Grid,[],Grid,_).
