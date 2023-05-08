@@ -8,40 +8,40 @@ replace([_|T], 0, X,[X|T]).
 replace([H|T], I, X, [H|R]):- I > -1, NI is I-1, replace(T, NI, X, R), !.
 replace(L, _, _, L).
 
-% get_index(+Path,-RIndex)
+% get_index(+Path,+NoC,-RIndex)
 % Genera el índice en la lista a partir de un valor [X,Y]
-get_index([X|[Y]],RIndex) :- RIndex is (X*5)+Y.
+get_index([X|[Y]],NoC,RIndex) :- RIndex is (X*NoC)+Y.
 
-% get_value(+Grid,+Path,-Value)
+% get_value(+Grid,+Path,NoC,-Value)
 % Extrae el valor de una celda a partir de su valor [X,Y]
-get_value(Grid,[X|[Y]],Value) :- %EXTRAE CELDA
-	get_index([X|[Y]],RIndex),
+get_value(Grid,[X|[Y]],NoC,Value) :- 
+	get_index([X|[Y]],NoC,RIndex),
 	nth0(RIndex,Grid,Value).
 
 
-resultado(SumaTotal, Mult, Bloque) :- 
+result(SumaTotal, Mult, Bloque) :- 
 	SumaTotal =< Mult,
 	Bloque is Mult.
-resultado(SumaTotal, Mult, Bloque)  :-
+result(SumaTotal, Mult, Bloque)  :-
 	BloqueAux is Mult * 2,
-	resultado(SumaTotal, BloqueAux, Bloque).
+	result(SumaTotal, BloqueAux, Bloque).
 
 
-% set_all_cero(+Grid,+Path,-RGrid,-SumaTotal)
-set_all_cero(Grid,[],Grid,_).
-set_all_cero(Grid,[P],RGrid,SumaTotal) :-
-	get_index(P,RIndex),
-	get_value(Grid,P,Valor),
+% make_move(+Grid,+Path,+Noc,-RGrid,-SumaTotal)
+make_move(Grid,[],_NoC,Grid,_).
+make_move(Grid,[P],NoC,RGrid,SumaTotal) :-
+	get_index(P,NoC,RIndex),
+	get_value(Grid,P,NoC,Valor),
 	SumaTotalAux is SumaTotal + Valor,
-	resultado(SumaTotalAux, 1, Bloque),
+	result(SumaTotalAux, 1, Bloque),
 	replace(Grid, RIndex, Bloque, Aux),
-	set_all_cero(Aux,[],RGrid,SumaTotalAux).
-set_all_cero(Grid,[P|Ps],RGrid,SumaTotal):-
-	get_index(P,RIndex),
-	get_value(Grid,P,Valor),
+	make_move(Aux,[],NoC,RGrid,SumaTotalAux).
+make_move(Grid,[P|Ps],NoC,RGrid,SumaTotal):-
+	get_index(P,NoC,RIndex),
+	get_value(Grid,P,NoC,Valor),
 	replace(Grid, RIndex, 0, Aux),
 	SumaTotalAux is SumaTotal + Valor,
-	set_all_cero(Aux,Ps,RGrid,SumaTotalAux).
+	make_move(Aux,Ps,NoC,RGrid,SumaTotalAux).
 
 % swap(+Grid,+IndexA,+IndexB,-RGrid)
 % Intercambia dos celdas de Grid a partir de los índices, devuelve RGrid
@@ -53,7 +53,7 @@ swap(Grid,IA,IB,RGrid) :-
 
 % create_list_zeros(+Grid,+Index,-List)
 % Genera una lista que contiene los índices con valor cero en Grid
-create_list_zeros([],40,_).
+create_list_zeros([],40,[]).
 create_list_zeros([0|T],I,[I|List]) :-
 	NI is I+1,
 	create_list_zeros(T,NI,List).
@@ -62,20 +62,20 @@ create_list_zeros([_|T],I,List) :-
 	create_list_zeros(T,NI,List).	
 
 % recursive_swap(+Grid,+Value,+Index,RGrid)
-recursive_swap(Grid,_,I,Grid) :-
+recursive_swap(Grid,_,I,_NoC,Grid) :-
     I < 0.
-recursive_swap(Grid,X,NI,RGrid) :-
+recursive_swap(Grid,X,NI,NoC,RGrid) :-
     swap(Grid,X,NI,Aux),
-	NI2 is NI-5,
-	recursive_swap(Aux,NI,NI2,RGrid).	
+	NI2 is NI-NoC,
+	recursive_swap(Aux,NI,NI2,NoC,RGrid).	
 
 % gravity(+Grid,+List0,-RGrid)
 % Intercambia recursivamente en la grilla para simular la gravedad
-gravity(Grid,[],Grid).
-gravity(Grid,[X|Xs],RGrid) :-
-	NI is X-5,
-	recursive_swap(Grid,X,NI,RRGrid),
-	gravity(RRGrid,Xs,RGrid).
+gravity(Grid,[],_NoC,Grid).
+gravity(Grid,[X|Xs],NoC,RGrid) :-
+	NI is X-NoC,
+	recursive_swap(Grid,X,NI,NoC,RRGrid),
+	gravity(RRGrid,Xs,NoC,RGrid).
 
 % generate(+List,+Index,-RList)
 generate([],40,[]).
@@ -94,12 +94,9 @@ equal(Grid, NI, I):-
 	V is Z.
 
 not_member(_, []).
-not_member(X, [Head|Tail]) :-
-     X \= Head,
-    not_member(X, Tail).
-
-% Primero tendremos un metodo shell que ira consumiendo la lista
-% El método recursivo irá pidiendo todas las adyacencias
+not_member(X, [H|T]) :-
+     X \= H,
+    not_member(X, T).
 
 check_up(I,[-6,-5,-4]) :- I < 5.
 check_up(I,[]) :- 		  I > 4.
@@ -166,39 +163,40 @@ list_booster(Grid,[_X|Xs],I,Ady,Visited,[RAdy|LoL]) :-
 	NI is I+1,
 	list_booster(Grid,Xs,NI,[],VisitedAUX,LoL).
 
-% set_all_cero_booster(+Grid,+Path,-RGrid,-SumaTotal)
-set_all_cero_booster(Grid,[],Grid,_).
-set_all_cero_booster(Grid,[P],RGrid,SumaTotal) :-
+% make_move_booster(+Grid,+Path,-RGrid,-SumaTotal)
+make_move_booster(Grid,[],Grid,_).
+make_move_booster(Grid,[P],RGrid,SumaTotal) :-
 	nth0(P,Grid,Value),
 	SumaTotalAux is SumaTotal + Value,
-	resultado(SumaTotalAux, 1, Bloque),
+	result(SumaTotalAux, 1, Bloque),
 	replace(Grid, P, Bloque, Aux),
-	set_all_cero_booster(Aux,[],RGrid,SumaTotalAux).
-set_all_cero_booster(Grid,[P|Ps],RGrid,SumaTotal):-
+	make_move_booster(Aux,[],RGrid,SumaTotalAux).
+make_move_booster(Grid,[P|Ps],RGrid,SumaTotal):-
 	nth0(P,Grid,Value),
 	replace(Grid, P, 0, Aux),
 	SumaTotalAux is SumaTotal + Value,
-	set_all_cero_booster(Aux,Ps,RGrid,SumaTotalAux).
+	make_move_booster(Aux,Ps,RGrid,SumaTotalAux).
 
-join_booster(Grid, [], NList, RGrids):-
-	gravity(Grid,NList,RGravity),
+join_booster(Grid, [], NList, NumOfColumns, RGrids):-
+	gravity(Grid,NList,NumOfColumns,RGravity),
 	generate(RGravity,0,RGenerate),
 	RGrids = [Grid,RGravity,RGenerate].
-join_booster(Grid, [X|Xs], NList, RGrids):-
-	set_all_cero_booster(Grid, X, Aux, 0),
-	create_list_zeros(Aux,0,NList),
-	join_booster(Aux, Xs,NList, RGrids).
+join_booster(Grid, [X|Xs], NList, NumOfColumns, RGrids):-
+	make_move_booster(Grid, X, Aux, 0),
+	create_list_zeros(Aux,0,NNList),
+	union(NList,NNList,List),
+	join_booster(Aux, Xs,List, NumOfColumns, RGrids).
 
-booster(Grid, RGrid):-
+booster(Grid, NumOfColumns, RGrid):-
 	list_booster(Grid,Grid,0,[],[],LoL),
-	join_booster(Grid, LoL, _, RGrid).
+	join_booster(Grid, LoL, [],NumOfColumns, RGrid).
 
-join(Grid, _NumOfColumns, Path, RGrids):-
-	set_all_cero(Grid,Path,Aux,0),
-	create_list_zeros(Aux,0,NList),
-	gravity(Aux,NList,RGravity),
+join(Grid, NumOfColumns, Path, RGrids):-
+	make_move(Grid,Path,NumOfColumns,RMove,0),
+	create_list_zeros(RMove,0,NList),
+	gravity(RMove,NList,NumOfColumns,RGravity),
 	generate(RGravity,0,RGenerate),
-	RGrids = [Aux,RGravity,RGenerate].
+	RGrids = [RMove,RGravity,RGenerate].
 
 /* 
 trace,

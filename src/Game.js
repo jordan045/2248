@@ -88,8 +88,11 @@ function Game() {
   }
 
   function booster(){
+    if (waiting) {
+      return;
+    }
     const gridS = JSON.stringify(grid);
-    const queryS = "booster(" + gridS + ", RGrids)";
+    const queryS = "booster(" + gridS + "," + numOfColumns + ", RGrids)";
     console.log(queryS);
     setWaiting(true);
     pengine.query(queryS, (success, response) => {
@@ -125,8 +128,14 @@ function Game() {
   return (
     <div className="game">
       <div className="header">
-        <div className="score">{score}</div>
-        <div className="score">{tempScore}</div>
+        <div className='dashscore'>
+          <div className='header_text'>Puntaje total</div>
+          <div className="score">{score}</div>
+        </div>
+        <div className='dashscore'>
+          <div className="score">{tempScore}</div>
+          <div className='header_text'>Jugada actual</div>
+        </div>
       </div>
       <Board
         grid={grid}

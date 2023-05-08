@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import Square from './Square';
 import Connector from './Connector';
-import MyButton from './Button';
 import { valueInPos, numberToColor, connectionInPath, posInPath, isAdyacent, equalPos } from './util';
 
 function Board({ grid, numOfColumns, path, onPathChange, onDone }) {
