@@ -113,8 +113,6 @@ check_left(I,[-6,-1,4]):- Mod is I mod 5, Mod is 0.
 check_right(I,[]):-       Mod is I mod 5, Mod =\= 4.
 check_right(I,[-4,1,6]):- Mod is I mod 5, Mod is 4.
 
-% valid_moves(+Index,-List)
-% True cuando List es una lista conteniendo los índices relativos válidos a la grilla para Index
 valid_moves(Index,List) :-
 	AllList = [-6,-5,-4,-1,1,4,5,6],
 	check_up(Index,LU),    
@@ -126,26 +124,21 @@ valid_moves(Index,List) :-
 	union(Aux2,LL,NList),
 	subtract(AllList,NList,List).
 
+recursive_find(_Grid,[],_Visited,NAdy, NAdy).
+recursive_find(Grid,[X|Xs],Visited,NAdy, ReturnAdy):-
+	valid_moves(X,NPossible),
+	find_adyacencies(Grid,X,NAdy,NPossible,Visited,RAdy),
+    union(NAdy,RAdy,NewAdy),
+	recursive_find(Grid,Xs,Visited,NewAdy, ReturnAdy).
 
-
-% add_index(+Ady,+Index,+AuxAdy,-Moves)
-% Agrega el indice actual a la lista de adyacencia si el findall no es vacío
 add_index(Ady,_,[],Ady).
 add_index(Ady,Index,_AuxAdy,Moves) :-
     union(Ady,[Index],Moves).
 
-merge_adys(_Grid,Moves,[],_Visited,Moves).
-merge_adys(Grid,Moves,AuxAdy,Visited,RAdy) :-
+merge_adys(_,Moves,[],_Visited,Moves).
+merge_adys(Grid,Moves,AuxAdy,Visited,ReturnAdy) :-
     union(Moves,AuxAdy,RAdy),
-	recursive_find(Grid,AuxAdy,Visited,RAdy).
-
-% Realiza la recursión de find_adyacencies
-recursive_find(_Grid,[],_Visited,[]).
-recursive_find(Grid,[X|Xs],Visited,RAdy):-
-	valid_moves(X,Possible),
-	find_adyacencies(Grid,X,[X|Xs],Possible,Visited,NewAdy),
-	recursive_find(Grid,Xs,Visited,RRAdy),
-	union(RRAdy,NewAdy,RAdy).
+	recursive_find(Grid,AuxAdy,Visited,RAdy,ReturnAdy).
 
 % find_adyacencies(+Grid,+Index,+Ady,+Possible,+Visited,-RAdy)
 % - Grid: La grilla del juego
@@ -159,29 +152,19 @@ find_adyacencies(Grid,Index,Ady,Possible,Visited,RAdy) :-
 				NI is X+Index, 
 				equal(Grid,NI,Index), 
 				not_member(NI,Ady),
-				not_member(NI,Visited)),Found),
-	add_index(Ady,Index,Found,ActualSet),
-    union(ActualSet,Visited,VisitedAux),
-    recursive_find(Grid,Found,VisitedAux,RAdy).
-    /*¨union(ActualSet,NewAdy,RAdy). */
-	/*merge_adys(Grid,ActualSet,Found,Visited,RAdy).*/
+                not_member(NI,Visited)),AuxAdy),
+    add_index(Ady,Index,AuxAdy,Moves),
+	merge_adys(Grid,Moves,AuxAdy,Visited,RAdy).
 
 % list_booster(Grid,Grid,0,[],LoL)
 % list_booster(+Grid,+GridConsume,Index,Ady,LoL)
 list_booster(_Grid,[],_I,_Ady,_Visited,[]).
-list_booster(Grid,[_X|Xs],I,[],Visited,LoL) :-
-	valid_moves(I,Possible),
-	find_adyacencies(Grid,I,[],Possible,Visited,RAdy),
-    union(RAdy,Visited,VisitedAux),
-	NI is I+1,
-	list_booster(Grid,Xs,NI,[],VisitedAux,LoL).
-list_booster(Grid,[_X|Xs],I,Ady,Visited,[Ady|LoL]) :-
+list_booster(Grid,[_X|Xs],I,Ady,Visited,[RAdy|LoL]) :-
 	valid_moves(I,Possible),
 	find_adyacencies(Grid,I,Ady,Possible,Visited,RAdy),
-    union(RAdy,Visited,VisitedAux),
+	union(RAdy,Visited,VisitedAUX),
 	NI is I+1,
-	list_booster(Grid,Xs,NI,[],VisitedAux,LoL).
-
+	list_booster(Grid,Xs,NI,[],VisitedAUX,LoL).
 
 % set_all_cero_booster(+Grid,+Path,-RGrid,-SumaTotal)
 set_all_cero_booster(Grid,[],Grid,_).
@@ -219,5 +202,19 @@ join(Grid, _NumOfColumns, Path, RGrids):-
 
 /* 
 trace,
-create_list_booster([64,64,64,64,64,64,4,4,4,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64],0,LoL,_).
+list_booster([2,4,64,64,2,
+	32,4,32,16,4,
+	16,4,16,16,16,
+	16,64,2,32,32,
+	64,2,64,32,64,
+	32,2,64,32,4,	
+	64,4,64,32,16,
+	64,8,16,2,32],[2,4,64,64,2,
+	32,4,32,16,4,
+	16,4,16,16,16,
+	16,64,2,32,32,
+	64,2,64,32,64,
+	32,2,64,32,4,	
+	64,4,64,32,16,
+	64,8,16,2,32],0,[],[],LoL).
  */
