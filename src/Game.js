@@ -69,7 +69,6 @@ function Game() {
           RGrids
         ).
     */
-    setTempScore(0);
     const gridS = JSON.stringify(grid);
     const pathS = JSON.stringify(path);
     const queryS = "join(" + gridS + "," + numOfColumns + "," + pathS + ", RGrids)";
