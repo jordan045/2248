@@ -183,7 +183,7 @@ find_adyacencies(Grid,Index,Ady,Possible,Visited,RAdy) :-
 				not_member(NI,Ady),
                 not_member(NI,Visited)),AuxAdy),
     add_index(Ady,Index,AuxAdy,Moves),
-	merge_adys(Grid,Moves,AuxAdy,Visited,RAdy).
+	merge_adys(Grid,Moves,AuxAdy,Visited,RAdy ).
 
 % list_booster(+Grid,+GridConsume,+Index,+Ady,+Visited,-LoL)
 % Genera una lista conformada por listas de adyacencias cuyos indices comparten valor
@@ -228,6 +228,47 @@ join_booster(Grid, [X|Xs], NList, NumOfColumns, RGrids):-
 booster(Grid, NumOfColumns, RGrid):-
 	list_booster(Grid,Grid,0,[],[],LoL),
 	join_booster(Grid, LoL, [],NumOfColumns, RGrid).
+
+% ------------------------------------------------------------------------------------
+
+recursive_find_maxmove(_Grid,[],NAdy,NAdy).
+recursive_find_maxmove(Grid,[X|Xs],NAdy,NewAdy):-
+	valid_moves(X,NPossible),
+	find_adyacencies_maxmove(Grid,X,NAdy,NPossible,RAdy,1),
+    union(NAdy,RAdy,NewAdy).
+
+equal_or_next(Grid,NI,I):-
+    equal(Grid,NI,I).
+equal_or_next(Grid,NI,I):-
+    nth0(NI, Grid, V),
+	nth0(I, Grid, Z),
+    V is Z*2.
+
+find_adyacencies_maxmove(Grid,Index,Ady,Possible,RAdy,1) :-
+	findall(NI,(member(X,Possible),			
+				NI is X+Index, 
+				equal_or_next(Grid,NI,Index), 
+				not_member(NI,Ady)),AuxAdy),
+    union(Ady,[Index],Moves),
+	recursive_find_maxmove(Grid,AuxAdy,Moves,RAdy).
+
+find_adyacencies_maxmove(Grid,Index,Ady,Possible,RAdy,0) :-
+	findall(NI,(member(X,Possible),			
+				NI is X+Index, 
+				equal(Grid,NI,Index), 
+				not_member(NI,Ady)),AuxAdy),
+    union(Ady,[Index],Moves),
+	recursive_find_maxmove(Grid,AuxAdy,Moves,RAdy).
+
+list_maxmove(_Grid,[],_I,_Ady,[]).
+list_maxmove(Grid,[_X|Xs],I,Ady,[RAdy|LoL]) :-
+	valid_moves(I,Possible),
+	find_adyacencies_maxmove(Grid,I,Ady,Possible,RAdy,0),
+	NI is I+1,
+	list_maxmove(Grid,Xs,NI,[],LoL).
+
+% ------------------------------------------------------------------------------------
+
 
 % join(+Grid,+NumOfColumns,+Path,-RGrids)
 % Realiza toda la logica detras de una jugada
