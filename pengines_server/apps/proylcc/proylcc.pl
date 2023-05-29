@@ -232,10 +232,11 @@ booster(Grid, NumOfColumns, RGrid):-
 % ------------------------------------------------------------------------------------
 
 recursive_find_maxmove(_Grid,[],NAdy,NAdy).
-recursive_find_maxmove(Grid,[X|Xs],NAdy,NewAdy):-
+recursive_find_maxmove(Grid,[X|Xs],NAdy,[NewAdy|L]):-
 	valid_moves(X,NPossible),
 	find_adyacencies_maxmove(Grid,X,NAdy,NPossible,RAdy,1),
-    union(NAdy,RAdy,NewAdy).
+    union(NAdy,RAdy,NewAdy),
+    recursive_find_maxmove(Grid,Xs,NAdy,L).
 
 equal_or_next(Grid,NI,I):-
     equal(Grid,NI,I).
