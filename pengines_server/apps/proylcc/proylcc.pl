@@ -231,12 +231,12 @@ booster(Grid, NumOfColumns, RGrid):-
 
 % ------------------------------------------------------------------------------------
 
-recursive_find_maxmove(_Grid,[],NAdy,NAdy).
-recursive_find_maxmove(Grid,[X|Xs],NAdy,[NewAdy|L]):-
+recursive_find_maxmove(_Grid,[],NAdy,NAdy, 1).
+recursive_find_maxmove(_Grid,[],_,[], 0).
+recursive_find_maxmove(Grid,[X|Xs],NAdy,[RAdy|L],_):-
 	valid_moves(X,NPossible),
 	find_adyacencies_maxmove(Grid,X,NAdy,NPossible,RAdy,1),
-    union(NAdy,RAdy,NewAdy),
-    recursive_find_maxmove(Grid,Xs,NAdy,L).
+    recursive_find_maxmove(Grid,Xs,NAdy,L,0).
 
 equal_or_next(Grid,NI,I):-
     equal(Grid,NI,I).
@@ -251,7 +251,7 @@ find_adyacencies_maxmove(Grid,Index,Ady,Possible,RAdy,1) :-
 				equal_or_next(Grid,NI,Index), 
 				not_member(NI,Ady)),AuxAdy),
     union(Ady,[Index],Moves),
-	recursive_find_maxmove(Grid,AuxAdy,Moves,RAdy).
+	recursive_find_maxmove(Grid,AuxAdy,Moves,RAdy,1).
 
 find_adyacencies_maxmove(Grid,Index,Ady,Possible,RAdy,0) :-
 	findall(NI,(member(X,Possible),			
@@ -259,7 +259,7 @@ find_adyacencies_maxmove(Grid,Index,Ady,Possible,RAdy,0) :-
 				equal(Grid,NI,Index), 
 				not_member(NI,Ady)),AuxAdy),
     union(Ady,[Index],Moves),
-	recursive_find_maxmove(Grid,AuxAdy,Moves,RAdy).
+	recursive_find_maxmove(Grid,AuxAdy,Moves,RAdy,1).
 
 list_maxmove(_Grid,[],_I,_Ady,[]).
 list_maxmove(Grid,[_X|Xs],I,Ady,[RAdy|LoL]) :-
