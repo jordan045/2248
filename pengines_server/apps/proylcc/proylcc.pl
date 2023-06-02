@@ -268,6 +268,31 @@ list_maxmove(Grid,[_X|Xs],I,Ady,[RAdy|LoL]) :-
 	NI is I+1,
 	list_maxmove(Grid,Xs,NI,[],LoL).
 
+make_move_maxmove(_Grid,[],SumaTotal,SumaTotal).
+make_move_maxmove(Grid,[X|Xs],SumaTotal,Return):-
+	nth0(X,Grid,Valor),
+	SumaTotalAux is SumaTotal + Valor,
+	make_move_maxmove(Grid,Xs,SumaTotalAux,Return).
+
+get_move(Grid,[[X|Xs]],CleanList):-
+	get_move(Grid,[X|Xs],CleanList).
+get_move(_Grid,CleanList,CleanList).
+	
+
+get_maxmove(_,[],MaxList,MaxList,MaxValue,MaxValue).
+get_maxmove(Grid,[X|Xs],_,RList,MaxValue,RValue):-
+	get_move(Grid,X,CleanList),
+    \+length(CleanList,1),
+	make_move_maxmove(Grid,CleanList,0,Value),
+	Value > MaxValue,
+	get_maxmove(Grid,Xs,CleanList,RList,Value,RValue).
+get_maxmove(Grid,[_|Xs],MaxList,RList,MaxValue,RValue):-
+	get_maxmove(Grid,Xs,MaxList,RList,MaxValue,RValue).
+
+maxmove(Grid,MaxList):-
+	list_maxmove(Grid,Grid,0,[],LoL),
+	get_maxmove(Grid,LoL,_,MaxList,0,MaxValue).
+
 % ------------------------------------------------------------------------------------
 
 
