@@ -236,6 +236,7 @@ recursive_find_maxmove(_Grid,[],_,[], 0).
 recursive_find_maxmove(Grid,[X|Xs],NAdy,[RAdy|L],_):-
 	valid_moves(X,NPossible),
 	find_adyacencies_maxmove(Grid,X,NAdy,NPossible,RAdy,1),
+	!,
     recursive_find_maxmove(Grid,Xs,NAdy,L,0).
 
 equal_or_next(Grid,NI,I):-
@@ -273,25 +274,31 @@ make_move_maxmove(Grid,[X|Xs],SumaTotal,Return):-
 	nth0(X,Grid,Valor),
 	SumaTotalAux is SumaTotal + Valor,
 	make_move_maxmove(Grid,Xs,SumaTotalAux,Return).
-
-get_move(Grid,[[X|Xs]],CleanList):-
-	get_move(Grid,[X|Xs],CleanList).
-get_move(_Grid,CleanList,CleanList).
 	
 
 get_maxmove(_,[],MaxList,MaxList,MaxValue,MaxValue).
 get_maxmove(Grid,[X|Xs],_,RList,MaxValue,RValue):-
-	get_move(Grid,X,CleanList),
-    \+length(CleanList,1),
-	make_move_maxmove(Grid,CleanList,0,Value),
+    \+number(x),
+	make_move_maxmove(Grid,X,0,Value),
 	Value > MaxValue,
-	get_maxmove(Grid,Xs,CleanList,RList,Value,RValue).
+	get_maxmove(Grid,Xs,X,RList,Value,RValue).
 get_maxmove(Grid,[_|Xs],MaxList,RList,MaxValue,RValue):-
 	get_maxmove(Grid,Xs,MaxList,RList,MaxValue,RValue).
 
+cleanList([],Aux,Aux).
+cleanList([[X|Xs]|L],Aux,CCl):-
+    cleanList([X|Xs],Aux,Cl),
+    cleanList(L,Cl,CCl).
+cleanList([X|Xs],Aux,CCl):-
+    cleanList(X,Aux,Cl),
+    cleanList(Xs,Cl,CCl).
+cleanList([X],Aux,[X|Aux]).
+cleanList([X|Xs],Aux,[[X|Xs]|Aux]).
+
 maxmove(Grid,MaxList):-
 	list_maxmove(Grid,Grid,0,[],LoL),
-	get_maxmove(Grid,LoL,_,MaxList,0,MaxValue).
+    cleanList(LoL,[],Cl),
+	get_maxmove(Grid,Cl,_,MaxList,0,MaxValue).
 
 % ------------------------------------------------------------------------------------
 
