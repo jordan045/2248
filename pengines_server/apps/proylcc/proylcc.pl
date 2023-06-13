@@ -56,10 +56,11 @@ swap(Grid,IA,IB,RGrid) :-
 
 % create_list_zeros(+Grid,+Index,-List)
 % Genera una lista que contiene los índices con valor cero en Grid
-create_list_zeros([],40,[]).
+create_list_zeros([],40,[]):- !.
 create_list_zeros([0|T],I,[I|List]) :-
 	NI is I+1,
-	create_list_zeros(T,NI,List).
+	create_list_zeros(T,NI,List),
+    !.
 create_list_zeros([_|T],I,List) :-
 	NI is I+1,
 	create_list_zeros(T,NI,List).	
@@ -76,7 +77,7 @@ recursive_swap(Grid,X,NI,NoC,RGrid) :-
 
 % gravity(+Grid,+List0,-RGrid)
 % Intercambia recursivamente en la grilla para simular la gravedad
-gravity(Grid,[],_NoC,Grid).
+gravity(Grid,[],_NoC,Grid):- !.
 gravity(Grid,[X|Xs],NoC,RGrid) :-
 	NI is X-NoC,
 	recursive_swap(Grid,X,NI,NoC,RRGrid),
@@ -304,7 +305,7 @@ format_maxmove([I|Is],[[PosX|[PosY]]|Ls],NoC) :-
 maxmove(Grid,RList,NoC):-
 	list_maxmove(Grid,Grid,0,[],LoL),
     cleanList(LoL,[],Cl),
-	get_maxmove(Grid,Cl,_,MaxList,0,MaxValue),
+	get_maxmove(Grid,Cl,_,MaxList,0,_),
 	format_maxmove(MaxList,RList,NoC).
 
 recursive_find_maxAd(_Grid,[],NAdy,NAdy).
@@ -337,21 +338,46 @@ list_maxAd(Grid,[_X|Xs],I,Ady,[RAdy|LoL]) :-
 	NI is I+1,
 	list_maxAd(Grid,Xs,NI,[],LoL).
 
-get_maxAd(_,[],MaxList,MaxList,MaxValue,MaxValue).
-get_maxAd(Grid,[X|Xs],_,RList,MaxValue,RValue):-
-    \+number(X),
-	make_move_maxmove(Grid,X,0,Value),
-	Value > MaxValue,
- 	% Aplicar gravedad SIN GENERAR BLOQUES NUEVOS
-    % Ver si tiene adyacente = Value
-	get_maxAd(Grid,Xs,X,RList,Value,RValue).
-get_maxAd(Grid,[_|Xs],MaxList,RList,MaxValue,RValue):-
-	get_maxAd(Grid,Xs,MaxList,RList,MaxValue,RValue).
+make_move_maxAd(Grid,[],_NoC,Grid,SumaTotal,SumaTotal):- !.
+make_move_maxAd(Grid,[P],NoC,RGrid,SumaTotal,R) :-
+	nth0(P,Grid,Value),
+	SumaTotalAux is SumaTotal + Value,
+	result(SumaTotalAux, 1, Bloque),
+	replace(Grid, P, Bloque, Aux),
+	make_move_maxAd(Aux,[],NoC,RGrid,SumaTotalAux,R),
+    !.
+make_move_maxAd(Grid,[P|Ps],NoC,RGrid,SumaTotal,R):-
+	nth0(P,Grid,Value),
+	replace(Grid, P, 0, Aux),
+	SumaTotalAux is SumaTotal + Value,
+	make_move_maxAd(Aux,Ps,NoC,RGrid,SumaTotalAux,R).
 
-maxAd(Grid,MaxList):-
+checkAdy(Grid,NumOfColumns,Index):-
+	valid_moves(Index,Possible),
+	findall(NI,(member(X,Possible),			
+				NI is X+Index, 
+				equal(Grid,NI,Index)),AuxAdy),
+    not(AuxAdy = []).
+
+get_maxAd(_,_,[],_MaxList,[],0,0).
+get_maxAd(_,_,[],MaxList,MaxList,MaxValue,MaxValue).
+get_maxAd(Grid,NoC,[X|Xs],_,RList,MaxValue,RValue):-
+    \+number(X),
+	make_move_maxAd(Grid,X,NoC,RGrid,0,Value),
+	Value > MaxValue,
+	create_list_zeros(RGrid,0,NList),
+	gravity(RGrid,NList,NoC,RGravity),
+    %%CALCULAR LX POSICION CON MAX VALOR
+	%%PENSAR EN REDEFINIR GRAVITY
+    checkAdy(RGravity,NoC,Lx),
+    get_maxAd(Grid,NoC,Xs,X,RList,Value,RValue).
+get_maxAd(Grid,NoC,[_|Xs],MaxList,RList,MaxValue,RValue):-
+	get_maxAd(Grid,NoC,Xs,MaxList,RList,MaxValue,RValue).
+
+maxAd(Grid,NoC,MaxList):-
     list_maxAd(Grid,Grid,0,[],LoL),
     cleanList(LoL,[],Cl),
-    get_maxAd(Grid,Cl,_,MaxList,0,_MaxValue).
+    get_maxAd(Grid,NoC,Cl,_,MaxList,0,_MaxValue).
 
 % ------------------------------------------------------------------------------------
 
