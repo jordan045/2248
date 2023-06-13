@@ -295,10 +295,17 @@ cleanList([X|Xs],Aux,CCl):-
 cleanList([X],Aux,[X|Aux]).
 cleanList([X|Xs],Aux,[[X|Xs]|Aux]).
 
-maxmove(Grid,MaxList):-
+format_maxmove([],[],_NoC).
+format_maxmove([I|Is],[[PosX|[PosY]]|Ls],NoC) :-
+	PosY is I mod NoC,
+	PosX is (I-PosY) / NoC,
+	format_maxmove(Is,Ls,NoC).
+
+maxmove(Grid,RList,NoC):-
 	list_maxmove(Grid,Grid,0,[],LoL),
     cleanList(LoL,[],Cl),
-	get_maxmove(Grid,Cl,_,MaxList,0,MaxValue).
+	get_maxmove(Grid,Cl,_,MaxList,0,MaxValue),
+	format_maxmove(MaxList,RList,NoC).
 
 % ------------------------------------------------------------------------------------
 

@@ -3,6 +3,7 @@ import PengineClient from './PengineClient';
 import Board from './Board';
 import { joinResult } from './util';
 import MyButton from './Button';
+import { numberToColor } from './util';
 
 let pengine;
 
@@ -105,6 +106,28 @@ function Game() {
     });
   }
 
+  function maxmove(){
+    //maxmove(Grid,MaxList)
+    if(waiting){
+      return;
+    }
+    const gridS = JSON.stringify(grid);
+    const queryS = "maxmove(" + gridS + ", MaxMove," + numOfColumns + ")";
+    console.log(queryS);
+/*     setWaiting(true); */
+    pengine.query(queryS, (success, response) => {
+      if (success) {
+        console.log('done');
+        onPathChange(response['MaxMove']);
+        console.log(response['MaxMove']);
+        console.log(path);
+      } else {
+        setWaiting(false);
+      }
+    });
+
+  }
+
   /**
    * Displays each grid of the sequence as the current grid in 1sec intervals.
    * @param {number[][]} rGrids a sequence of grids.
@@ -132,7 +155,10 @@ function Game() {
           <div className="score">{score}</div>
         </div>
         <div className='dashscore'>
-          <div className="score">{tempScore}</div>
+          <div 
+            className="square"
+            style={tempScore === 0 ? undefined :{ width:'60px',height:'60px',backgroundColor: numberToColor(tempScore)}}
+          >{tempScore}</div>
           <div className='header_text'>Jugada actual</div>
         </div>
       </div>
@@ -143,10 +169,16 @@ function Game() {
         onPathChange={onPathChange}
         onDone={onPathDone}
       />
+      <div className='buttons'>
       <MyButton
         className='square'
         onClick= {booster}
       />
+      <MyButton
+        className='square'
+        onClick= {maxmove}
+      />
+      </div>
     </div>
   );
 }

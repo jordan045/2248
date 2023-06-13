@@ -5,16 +5,18 @@ body {
 
 .game {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
+  justify-content: space-evenly;
 }
 
 .header {
   border-bottom: 1px solid lightgray;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: space-evenly;
-  width: 100%;
+  width: 30%;
 }
 
 .header_text{
@@ -27,6 +29,7 @@ body {
 }
 
 .dashscore{
+  height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -35,6 +38,7 @@ body {
 .board {
   margin: 20px;
   position: relative;
+  width: 40%;
 }
 
 .squares {
@@ -76,11 +80,15 @@ body {
 }
 
 .rise {
-  margin: 2px;
+  margin: 0px;
+  border: 3px solid black;
+  transition: 0.2s;
 }
 
 .riseOnHover:hover {
-  margin: 2px;
+  margin: 0px;
+  border: 3px solid black;
+  transition: 0.2s;
 }
 
 .horizontalConnectors {
