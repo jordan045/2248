@@ -307,6 +307,52 @@ maxmove(Grid,RList,NoC):-
 	get_maxmove(Grid,Cl,_,MaxList,0,MaxValue),
 	format_maxmove(MaxList,RList,NoC).
 
+recursive_find_maxAd(_Grid,[],NAdy,NAdy).
+recursive_find_maxAd(Grid,[X|Xs],NAdy,[NewAdy|L]):-
+	valid_moves(X,NPossible),
+	find_adyacencies_maxAd(Grid,X,NAdy,NPossible,RAdy,1),
+    union(NAdy,RAdy,NewAdy),
+    recursive_find_maxAd(Grid,Xs,NAdy,L).
+
+find_adyacencies_maxAd(Grid,Index,Ady,Possible,RAdy,1) :-
+	findall(NI,(member(X,Possible),			
+				NI is X+Index, 
+				equal_or_next(Grid,NI,Index), 
+				not_member(NI,Ady)),AuxAdy),
+    union(Ady,[Index],Moves),
+	recursive_find_maxAd(Grid,AuxAdy,Moves,RAdy).
+
+find_adyacencies_maxAd(Grid,Index,Ady,Possible,RAdy,0) :-
+	findall(NI,(member(X,Possible),			
+				NI is X+Index, 
+				equal(Grid,NI,Index), 
+				not_member(NI,Ady)),AuxAdy),
+    union(Ady,[Index],Moves),
+	recursive_find_maxAd(Grid,AuxAdy,Moves,RAdy).
+
+list_maxAd(_Grid,[],_I,_Ady,[]).
+list_maxAd(Grid,[_X|Xs],I,Ady,[RAdy|LoL]) :-
+	valid_moves(I,Possible),
+	find_adyacencies_maxAd(Grid,I,Ady,Possible,RAdy,0),
+	NI is I+1,
+	list_maxAd(Grid,Xs,NI,[],LoL).
+
+get_maxAd(_,[],MaxList,MaxList,MaxValue,MaxValue).
+get_maxAd(Grid,[X|Xs],_,RList,MaxValue,RValue):-
+    \+number(X),
+	make_move_maxmove(Grid,X,0,Value),
+	Value > MaxValue,
+ 	% Aplicar gravedad SIN GENERAR BLOQUES NUEVOS
+    % Ver si tiene adyacente = Value
+	get_maxAd(Grid,Xs,X,RList,Value,RValue).
+get_maxAd(Grid,[_|Xs],MaxList,RList,MaxValue,RValue):-
+	get_maxAd(Grid,Xs,MaxList,RList,MaxValue,RValue).
+
+maxAd(Grid,MaxList):-
+    list_maxAd(Grid,Grid,0,[],LoL),
+    cleanList(LoL,[],Cl),
+    get_maxAd(Grid,Cl,_,MaxList,0,_MaxValue).
+
 % ------------------------------------------------------------------------------------
 
 
