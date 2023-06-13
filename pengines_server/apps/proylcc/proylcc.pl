@@ -69,7 +69,7 @@ create_list_zeros([_|T],I,List) :-
 % Intercambia el valor de una celda vacia con el de su inmediata superior 
 % recursivamente, hasta que la celda vacia quede en la parte superior de la grilla
 recursive_swap(Grid,_,I,_NoC,Grid) :-
-    I < 0.
+    I < 0,!.
 recursive_swap(Grid,X,NI,NoC,RGrid) :-
     swap(Grid,X,NI,Aux),
 	NI2 is NI-NoC,
@@ -81,7 +81,7 @@ gravity(Grid,[],_NoC,Grid):- !.
 gravity(Grid,[X|Xs],NoC,RGrid) :-
 	NI is X-NoC,
 	recursive_swap(Grid,X,NI,NoC,RRGrid),
-	gravity(RRGrid,Xs,NoC,RGrid).
+	gravity(RRGrid,Xs,NoC,RGrid),!.
 
 % generate(+List,+Index,-RList)
 % Genera nuevos bloques en las posiciones vacias de la grilla
@@ -112,25 +112,25 @@ not_member(X, [H|T]) :-
 % check_up(+I,-List)
 % En caso de no poder movernos hacia arriba, devuelve los valores que 
 %no tendremos que considerar al momento de calcular las adyacencias
-check_up(I,[-6,-5,-4]) :- I < 5.
+check_up(I,[-6,-5,-4]) :- I < 5,!.
 check_up(I,[]) :- 		  I > 4.
 
 % check_down(+I,-List)
 % En caso de no poder movernos hacia abajo, devuelve los valores que 
 %no tendremos que considerar al momento de calcular las adyacencias
-check_down(I,[]):-          I < 35.
+check_down(I,[]):-          I < 35,!.
 check_down(I,[4,5,6]):-  	I > 34.
 
 % check_left(+I,-List)
 % En caso de no poder movernos hacia la izquierda, devuelve los valores que 
 %no tendremos que considerar al momento de calcular las adyacencias
-check_left(I,[]):-        Mod is I mod 5, Mod =\= 0.
+check_left(I,[]):-        Mod is I mod 5, Mod =\= 0,!.
 check_left(I,[-6,-1,4]):- Mod is I mod 5, Mod is 0.
 
 % check_right(+I,-List)
 % En caso de no poder movernos hacia la derecha, devuelve los valores que 
 %no tendremos que considerar al momento de calcular las adyacencias
-check_right(I,[]):-       Mod is I mod 5, Mod =\= 4.
+check_right(I,[]):-       Mod is I mod 5, Mod =\= 4,!.
 check_right(I,[-4,1,6]):- Mod is I mod 5, Mod is 4.
 
 % valid_moves(+Index,-List)
@@ -344,7 +344,7 @@ make_move_maxAd(Grid,[P],NoC,RGrid,SumaTotal,R) :-
 	SumaTotalAux is SumaTotal + Value,
 	result(SumaTotalAux, 1, Bloque),
 	replace(Grid, P, Bloque, Aux),
-	make_move_maxAd(Aux,[],NoC,RGrid,SumaTotalAux,R),
+	make_move_maxAd(Aux,[],NoC,RGrid,Bloque,R),
     !.
 make_move_maxAd(Grid,[P|Ps],NoC,RGrid,SumaTotal,R):-
 	nth0(P,Grid,Value),
@@ -357,7 +357,13 @@ checkAdy(Grid,NumOfColumns,Index):-
 	findall(NI,(member(X,Possible),			
 				NI is X+Index, 
 				equal(Grid,NI,Index)),AuxAdy),
-    not(AuxAdy = []).
+    \+length(AuxAdy,0).
+
+traceLast(Grid,Lx,VLx,Lx):-
+	nth0(Lx,Grid,VLx),!.
+traceLast(Grid,Lx,VLx,Rx):-
+	NLx is Lx+5,
+	traceLast(Grid,NLx,VLx,Rx).
 
 get_maxAd(_,_,[],_MaxList,[],0,0).
 get_maxAd(_,_,[],MaxList,MaxList,MaxValue,MaxValue).
@@ -366,18 +372,22 @@ get_maxAd(Grid,NoC,[X|Xs],_,RList,MaxValue,RValue):-
 	make_move_maxAd(Grid,X,NoC,RGrid,0,Value),
 	Value > MaxValue,
 	create_list_zeros(RGrid,0,NList),
+	last(X,Lx),
+	nth0(Lx,RGrid,VLx),
 	gravity(RGrid,NList,NoC,RGravity),
+	traceLast(RGravity,Lx,VLx,Rx),
     %%CALCULAR LX POSICION CON MAX VALOR
 	%%PENSAR EN REDEFINIR GRAVITY
-    checkAdy(RGravity,NoC,Lx),
+    checkAdy(RGravity,NoC,Rx),
     get_maxAd(Grid,NoC,Xs,X,RList,Value,RValue).
 get_maxAd(Grid,NoC,[_|Xs],MaxList,RList,MaxValue,RValue):-
 	get_maxAd(Grid,NoC,Xs,MaxList,RList,MaxValue,RValue).
 
-maxAd(Grid,NoC,MaxList):-
+maxAd(Grid,NoC,RList):-
     list_maxAd(Grid,Grid,0,[],LoL),
     cleanList(LoL,[],Cl),
-    get_maxAd(Grid,NoC,Cl,_,MaxList,0,_MaxValue).
+    get_maxAd(Grid,NoC,Cl,_,MaxList,0,_MaxValue),
+	format_maxmove(MaxList,RList,NoC).
 
 % ------------------------------------------------------------------------------------
 

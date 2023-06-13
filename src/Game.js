@@ -128,6 +128,27 @@ function Game() {
 
   }
 
+  function maxAd(){
+    //maxmove(Grid,MaxList)
+    if(waiting){
+      return;
+    }
+    const gridS = JSON.stringify(grid);
+    const queryS = "maxAd(" + gridS + "," + numOfColumns + ",MaxList)";
+    console.log(queryS);
+    pengine.query(queryS, (success, response) => {
+      if (success) {
+        console.log('done');
+        onPathChange(response['MaxList']);
+        console.log(response['MaxList']);
+        console.log(path);
+      } else {
+        setWaiting(false);
+      }
+    });
+
+  }
+
   /**
    * Displays each grid of the sequence as the current grid in 1sec intervals.
    * @param {number[][]} rGrids a sequence of grids.
@@ -177,6 +198,10 @@ function Game() {
       <MyButton
         className='square'
         onClick= {maxmove}
+      />
+      <MyButton
+        className='square'
+        onClick= {maxAd}
       />
       </div>
     </div>
