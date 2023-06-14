@@ -231,15 +231,20 @@ booster(Grid, NumOfColumns, RGrid):-
 	join_booster(Grid, LoL, [],NumOfColumns, RGrid).
 
 % ------------------------------------------------------------------------------------
-
+% recursive_find_maxmove(+Grid,+Ady,+NoC,+NAdy,-ReturnAdy,+Identif)
+% Busca recursivamente posibles jugadas en aquellos bloques que ya fueron 
+% identificados como parte de la jugada
 recursive_find_maxmove(_Grid,[],_NoC,NAdy,NAdy, 1).
 recursive_find_maxmove(_Grid,[],_NoC,_,[], 0).
 recursive_find_maxmove(Grid,[X|Xs],NoC,NAdy,[RAdy|L],_):-
 	valid_moves(X,NoC,NPossible),
-	find_adyacencies_maxmove(Grid,X,NoC,NAdy,NPossible,RAdy,1),
+	find_plays_maxmove(Grid,X,NoC,NAdy,NPossible,RAdy,1),
 	!,
     recursive_find_maxmove(Grid,Xs,NoC,NAdy,L,0).
 
+% equal_or_next(+Grid,+NI,+I)
+% Compara los valores a partir de su indice en la grilla, y devuelve verdadero si ambos valores
+% son iguales o si uno de ellos es la potencia de 2 inmediatamente mayor al otro
 equal_or_next(Grid,NI,I):-
     equal(Grid,NI,I).
 equal_or_next(Grid,NI,I):-
@@ -247,7 +252,17 @@ equal_or_next(Grid,NI,I):-
 	nth0(I, Grid, Z),
     V is Z*2.
 
-find_adyacencies_maxmove(Grid,Index,NoC,Ady,Possible,RAdy,1) :-
+% find_plays_maxmove(+Grid,+Index,+NoC,+Ady,+Possible,-RAdy,+Identif)
+% Genera una lista con los indices que pueden ser parte de una jugada partiendo del indice dado
+% - Grid: La grilla del juego
+% - Index: El índice sobre el cual se buscaran jugadas válidas
+% - Ady: La lista de la jugada local
+% - Possible: La lista con las jugadas válidas para el indice actual
+% - RAdy: La nueva lista que contendrá la jugada local al finalizar la recursión
+% - Identif: Identificador que permite saber si estamos en el 1er paso de la jugada 
+%   (solo nos podemos mover a un bloque de igual valor), o en un paso que no es el primero
+%   (nos podemos mover a un bloque de igual valor o a uno cuyo valor sea la potencia de 2 inmediatamente mayor)
+find_plays_maxmove(Grid,Index,NoC,Ady,Possible,RAdy,1) :-
 	findall(NI,(member(X,Possible),			
 				NI is X+Index, 
 				equal_or_next(Grid,NI,Index), 
@@ -255,7 +270,7 @@ find_adyacencies_maxmove(Grid,Index,NoC,Ady,Possible,RAdy,1) :-
     union(Ady,[Index],Moves),
 	recursive_find_maxmove(Grid,AuxAdy,NoC,Moves,RAdy,1).
 
-find_adyacencies_maxmove(Grid,Index,NoC,Ady,Possible,RAdy,0) :-
+find_plays_maxmove(Grid,Index,NoC,Ady,Possible,RAdy,0) :-
 	findall(NI,(member(X,Possible),			
 				NI is X+Index, 
 				equal(Grid,NI,Index), 
@@ -263,20 +278,27 @@ find_adyacencies_maxmove(Grid,Index,NoC,Ady,Possible,RAdy,0) :-
     union(Ady,[Index],Moves),
 	recursive_find_maxmove(Grid,AuxAdy,NoC,Moves,RAdy,1).
 
+% list_maxmove(+Grid,+GridConsume,+NoC,+Index,+Ady,-LoL)
+% Genera una lista conformada por listas de jugadas posibles (Sin contemplar jugadas intermedias)
 list_maxmove(_Grid,[],_NoC,_I,_Ady,[]).
 list_maxmove(Grid,[_X|Xs],NoC,I,Ady,[RAdy|LoL]) :-
 	valid_moves(I,NoC,Possible),
-	find_adyacencies_maxmove(Grid,I,NoC,Ady,Possible,RAdy,0),
+	find_plays_maxmove(Grid,I,NoC,Ady,Possible,RAdy,0),
 	NI is I+1,
 	list_maxmove(Grid,Xs,NoC,NI,[],LoL).
 
+% make_move_maxmove(+Grid,+Path,+SumaTotal,-Return)
+% Dada una lista de indices, calcula el resultado que se obtendira de 
+% sumar los valores correspondientes a cada indice de la lista. 
 make_move_maxmove(_Grid,[],SumaTotal,SumaTotal).
 make_move_maxmove(Grid,[X|Xs],SumaTotal,Return):-
 	nth0(X,Grid,Valor),
 	SumaTotalAux is SumaTotal + Valor,
 	make_move_maxmove(Grid,Xs,SumaTotalAux,Return).
 	
-
+% get_maxmove(+Grid,+List,+ActualMaxList,-MaxList,+ActualMaxValue,-MaxValue)
+% Dada una grilla, devuelve la jugada con el maximo valor posible en esa grilla
+% (O una de ellas en caso de haber mas de una con el mismo valor),y el valor del bloque resultado en cuestión
 get_maxmove(_,[],MaxList,MaxList,MaxValue,MaxValue).
 get_maxmove(Grid,[X|Xs],_,RList,MaxValue,RValue):-
     \+number(X),
@@ -286,6 +308,9 @@ get_maxmove(Grid,[X|Xs],_,RList,MaxValue,RValue):-
 get_maxmove(Grid,[_|Xs],MaxList,RList,MaxValue,RValue):-
 	get_maxmove(Grid,Xs,MaxList,RList,MaxValue,RValue).
 
+% CleanList(+LoL,+Aux,-Cl)
+% Dada una lista de listas con niveles de profundidad no uniformes, 
+% devuelve una Lista de lista de, a lo sumo, profundidad 1
 cleanList([],Aux,Aux).
 cleanList([[X|Xs]|L],Aux,CCl):-
     cleanList([X|Xs],Aux,Cl),
@@ -296,26 +321,43 @@ cleanList([X|Xs],Aux,CCl):-
 cleanList([X],Aux,[X|Aux]).
 cleanList([X|Xs],Aux,[[X|Xs]|Aux]).
 
+% Format_maxmove(+List,-Rlist,+NoC)
+% Dado un indice Z, devuelve su equivalente como un par [X,Y]
 format_maxmove([],[],_NoC).
 format_maxmove([I|Is],[[PosX|[PosY]]|Ls],NoC) :-
 	PosY is I mod NoC,
 	PosX is (I-PosY) / NoC,
 	format_maxmove(Is,Ls,NoC).
 
+% maxmove(+Grid,-Rlist,+Noc)
+% Devuelve el path correspondiente a la maxima jugada que se puede hacer en la grilla dada
 maxmove(Grid,RList,NoC):-
 	list_maxmove(Grid,Grid,NoC,0,[],LoL),
     cleanList(LoL,[],Cl),
 	get_maxmove(Grid,Cl,_,MaxList,0,_),
 	format_maxmove(MaxList,RList,NoC).
 
+% recursive_find_maxAd(+Grid,+Ady,+NoC,+NAdy,-ReturnAdy,)
+% Busca recursivamente posibles jugadas en aquellos bloques que ya fueron 
+% identificados como parte de la jugada (Contempla jugadas intermedias)
 recursive_find_maxAd(_Grid,[],_NoC,NAdy,NAdy).
 recursive_find_maxAd(Grid,[X|Xs],NoC,NAdy,[NewAdy|L]):-
 	valid_moves(X,NoC,NPossible),
-	find_adyacencies_maxAd(Grid,X,NoC,NAdy,NPossible,RAdy,1),
+	find_plays_maxAd(Grid,X,NoC,NAdy,NPossible,RAdy,1),
     union(NAdy,RAdy,NewAdy),
     recursive_find_maxAd(Grid,Xs,NoC,NAdy,L).
 
-find_adyacencies_maxAd(Grid,Index,NoC,Ady,Possible,RAdy,1) :-
+% find_plays_maxAd(+Grid,+Index,+NoC,+Ady,+Possible,-RAdy,+Identif)
+% Genera una lista con los indices que pueden ser parte de una jugada partiendo del indice dado
+% - Grid: La grilla del juego
+% - Index: El índice sobre el cual se buscaran jugadas válidas
+% - Ady: La lista de la jugada local
+% - Possible: La lista con las jugadas válidas para el indice actual
+% - RAdy: La nueva lista que contendrá la jugada local al finalizar la recursión
+% - Identif: Identificador que permite saber si estamos en el 1er paso de la jugada 
+%   (solo nos podemos mover a un bloque de igual valor), o en un paso que no es el primero
+%   (nos podemos mover a un bloque de igual valor o a uno cuyo valor sea la potencia de 2 inmediatamente mayor)
+find_plays_maxAd(Grid,Index,NoC,Ady,Possible,RAdy,1) :-
 	findall(NI,(member(X,Possible),			
 				NI is X+Index, 
 				equal_or_next(Grid,NI,Index), 
@@ -323,7 +365,7 @@ find_adyacencies_maxAd(Grid,Index,NoC,Ady,Possible,RAdy,1) :-
     union(Ady,[Index],Moves),
 	recursive_find_maxAd(Grid,AuxAdy,NoC,Moves,RAdy).
 
-find_adyacencies_maxAd(Grid,Index,NoC,Ady,Possible,RAdy,0) :-
+find_plays_maxAd(Grid,Index,NoC,Ady,Possible,RAdy,0) :-
 	findall(NI,(member(X,Possible),			
 				NI is X+Index, 
 				equal(Grid,NI,Index), 
@@ -331,13 +373,18 @@ find_adyacencies_maxAd(Grid,Index,NoC,Ady,Possible,RAdy,0) :-
     union(Ady,[Index],Moves),
 	recursive_find_maxAd(Grid,AuxAdy,NoC,Moves,RAdy).
 
+% list_maxAd(+Grid,+GridConsume,+NoC,+Index,+Ady,-LoL)
+% Genera una lista conformada por listas de jugadas posibles (Contempla jugadas intermedias)
 list_maxAd(_Grid,[],_NoC,_I,_Ady,[]).
 list_maxAd(Grid,[_X|Xs],NoC,I,Ady,[RAdy|LoL]) :-
 	valid_moves(I,NoC,Possible),
-	find_adyacencies_maxAd(Grid,I,NoC,Ady,Possible,RAdy,0),
+	find_plays_maxAd(Grid,I,NoC,Ady,Possible,RAdy,0),
 	NI is I+1,
 	list_maxAd(Grid,Xs,NoC,NI,[],LoL).
 
+% make_move_maxAd(+Grid,+Path,-RGrid,+SumaTotal,-ReturnValue)
+% Dada una grilla y una juagda valida en dicha grilla, devuelve la grilla resultante tras aplicar
+% la jugada (Sin aplicar gravedad aún) y el valor resultante de la jugada
 make_move_maxAd(Grid,[],Grid,SumaTotal,SumaTotal):- !.
 make_move_maxAd(Grid,[P],RGrid,SumaTotal,R) :-
 	nth0(P,Grid,Value),
@@ -352,6 +399,9 @@ make_move_maxAd(Grid,[P|Ps],RGrid,SumaTotal,R):-
 	SumaTotalAux is SumaTotal + Value,
 	make_move_maxAd(Aux,Ps,RGrid,SumaTotalAux,R).
 
+% checkAdy(+Grid,+NoC,+Index)
+% Devuelve verdadero si existe un bloque adyacente al bloque en el indice dado que
+% comparta valor con el bloque ubicado en el el indice de la grilla dado
 checkAdy(Grid,NoC,Index):-
 	valid_moves(Index,NoC,Possible),
 	findall(NI,(member(X,Possible),			
@@ -359,12 +409,19 @@ checkAdy(Grid,NoC,Index):-
 				equal(Grid,NI,Index)),AuxAdy),
     \+length(AuxAdy,0).
 
+% traceLast(+Grid,+NoC,Lx,VLx,RX)
+% Devuelve el indice en el que se encuentra el bloque resultado de una jugada tras aplicar la gravedad
 traceLast(Grid,_,Lx,VLx,Lx):-
 	nth0(Lx,Grid,VLx),!.
 traceLast(Grid,NoC,Lx,VLx,Rx):-
 	NLx is Lx+NoC,
 	traceLast(Grid,NoC,NLx,VLx,Rx).
 
+%get_maxAd(+Grid,+NoC,+List,+ActualMaxList,-MaxList,+ActualMaxValue,-MaxValue)
+% Dada una grilla, devuelve la jugada con el maximo valor posible en esa grilla
+% (O una de ellas en caso de haber mas de una con el mismo valor) tal que se verifique que el bloque 
+% resultante de la jugada tenga igual valor a (al menos) un bloque adyacente al mismo tras aplicar la gravedad,
+% y el valor del bloque resultado en cuestión
 get_maxAd(_,_,[],_MaxList,[],0,0).
 get_maxAd(_,_,[],MaxList,MaxList,MaxValue,MaxValue).
 get_maxAd(Grid,NoC,[X|Xs],_,RList,MaxValue,RValue):-
@@ -381,6 +438,10 @@ get_maxAd(Grid,NoC,[X|Xs],_,RList,MaxValue,RValue):-
 get_maxAd(Grid,NoC,[_|Xs],MaxList,RList,MaxValue,RValue):-
 	get_maxAd(Grid,NoC,Xs,MaxList,RList,MaxValue,RValue).
 
+% maxmove(+Grid,-Rlist,+Noc)
+% Devuelve el path correspondiente a la jugada con el maximo valor posible en esa grilla
+% tal que se verifique que el bloque resultante de la jugada tenga igual valor a 
+% un bloque adyacente al mismo tras aplicar la gravedad
 maxAd(Grid,NoC,RList):-
     list_maxAd(Grid,Grid,NoC,0,[],LoL),
     cleanList(LoL,[],Cl),
