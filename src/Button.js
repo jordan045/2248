@@ -1,13 +1,12 @@
 
-function MyButton({onClick}) {
-    // value === 0 means the square is empty.    
+function MyButton({onClick,name,color}) {
     return (
         <div
             className="booster"
-            style={{backgroundColor: "#ec893b" }}
+            style={{backgroundColor: color }}
             onClick={onClick}
         >
-            Colapsar iguales
+            {name}<span class="load loading"></span>
         </div>
     );
 }

@@ -16,6 +16,7 @@ function Game() {
   const [tempScore, setTempScore] = useState(0);
   const [path, setPath] = useState([]);
   const [waiting, setWaiting] = useState(false);
+  const [working, setWorking] = useState(false);
 
   useEffect(() => {
     // This is executed just once, after the first render.
@@ -44,6 +45,7 @@ function Game() {
     if (waiting) {
       return;
     }
+    setWorking(true);
     setPath(newPath);
     setTempScore(joinResult(newPath, grid, numOfColumns));
     console.log(JSON.stringify(newPath));
@@ -84,11 +86,12 @@ function Game() {
         setWaiting(false);
       }
     });
+    setWorking(false);
     setTempScore(0);
   }
 
   function booster(){
-    if (waiting) {
+    if (waiting || working) {
       return;
     }
     const gridS = JSON.stringify(grid);
@@ -108,7 +111,7 @@ function Game() {
 
   function maxmove(){
     //maxmove(Grid,MaxList)
-    if(waiting){
+    if(waiting || working){
       return;
     }
     const gridS = JSON.stringify(grid);
@@ -130,7 +133,7 @@ function Game() {
 
   function maxAd(){
     //maxmove(Grid,MaxList)
-    if(waiting){
+    if(waiting || working){
       return;
     }
     const gridS = JSON.stringify(grid);
@@ -170,19 +173,6 @@ function Game() {
   }
   return (
     <div className="game">
-      <div className="header">
-        <div className='dashscore'>
-          <div className='header_text'>Puntaje total</div>
-          <div className="score">{score}</div>
-        </div>
-        <div className='dashscore'>
-          <div 
-            className="square"
-            style={tempScore === 0 ? undefined :{ width:'60px',height:'60px',backgroundColor: numberToColor(tempScore)}}
-          >{tempScore}</div>
-          <div className='header_text'>Jugada actual</div>
-        </div>
-      </div>
       <Board
         grid={grid}
         numOfColumns={numOfColumns}
@@ -190,19 +180,40 @@ function Game() {
         onPathChange={onPathChange}
         onDone={onPathDone}
       />
-      <div className='buttons'>
-      <MyButton
-        className='square'
-        onClick= {booster}
-      />
-      <MyButton
-        className='square'
-        onClick= {maxmove}
-      />
-      <MyButton
-        className='square'
-        onClick= {maxAd}
-      />
+      <div className="controlPanel">
+        <div className="header">
+          <div className='dashscore'>
+            <div className='header_text'>Puntaje total</div>
+            <div className="score">{score}</div>
+          </div>
+          <div className='dashscore'>
+            <div 
+              className="square"
+              style={tempScore === 0 ? undefined :{ width:'60px',height:'60px',backgroundColor: numberToColor(tempScore)}}
+            >{tempScore}</div>
+            <div className='header_text'>Jugada actual</div>
+          </div>
+        </div>
+        <div className='buttons'>
+          <MyButton
+            className='square'
+            onClick= {booster}
+            name='Colapsar Iguales'
+            color='#164051'
+          />
+          <MyButton
+            className='square'
+            onClick= {maxmove}
+            name='Maximo movimiento'
+            color='#9D2043'
+          />
+          <MyButton
+            className='square'
+            onClick= {maxAd}
+            name='Maximo Adyacente'
+            color='#E64433'
+          />
+        </div>
       </div>
     </div>
   );
