@@ -112,49 +112,49 @@ not_member(X, [H|T]) :-
 % check_up(+I,-List)
 % En caso de no poder movernos hacia arriba, devuelve los valores que 
 %no tendremos que considerar al momento de calcular las adyacencias
-check_up(I,[-6,-5,-4]) :- I < 5,!.
-check_up(I,[]) :- 		  I > 4.
+check_up(I,NoC,[-6,-5,-4]) :- I < NoC,!.
+check_up(I,NoC,[]) :- 		  I > NoC-1.
 
 % check_down(+I,-List)
 % En caso de no poder movernos hacia abajo, devuelve los valores que 
 %no tendremos que considerar al momento de calcular las adyacencias
-check_down(I,[]):-          I < 35,!.
-check_down(I,[4,5,6]):-  	I > 34.
+check_down(I,NoC,[]):-          I < NoC*7,!.
+check_down(I,NoC,[4,5,6]):-  	I > (NoC*7)-1.
 
 % check_left(+I,-List)
 % En caso de no poder movernos hacia la izquierda, devuelve los valores que 
 %no tendremos que considerar al momento de calcular las adyacencias
-check_left(I,[]):-        Mod is I mod 5, Mod =\= 0,!.
-check_left(I,[-6,-1,4]):- Mod is I mod 5, Mod is 0.
+check_left(I,NoC,[]):-        Mod is I mod NoC, Mod =\= 0,!.
+check_left(I,NoC,[-6,-1,4]):- Mod is I mod NoC, Mod is 0.
 
 % check_right(+I,-List)
 % En caso de no poder movernos hacia la derecha, devuelve los valores que 
 %no tendremos que considerar al momento de calcular las adyacencias
-check_right(I,[]):-       Mod is I mod 5, Mod =\= 4,!.
-check_right(I,[-4,1,6]):- Mod is I mod 5, Mod is 4.
+check_right(I,NoC,[]):-       Mod is I mod NoC, Mod =\= NoC-1,!.
+check_right(I,NoC,[-4,1,6]):- Mod is I mod NoC, Mod is NoC-1.
 
-% valid_moves(+Index,-List)
+% valid_moves(+Index,+NoC,-List)
 % Calcula las posiciones hacia las que nos podemos mover dado un determinado indice
-valid_moves(Index,List) :-
+valid_moves(Index,NoC,List) :-
 	AllList = [-6,-5,-4,-1,1,4,5,6],
-	check_up(Index,LU),    
-	check_down(Index,LD),  
-	check_right(Index,LR), 
-	check_left(Index,LL),  
+	check_up(Index,NoC,LU),    
+	check_down(Index,NoC,LD),  
+	check_right(Index,NoC,LR), 
+	check_left(Index,NoC,LL),  
 	union(LU,LD,Aux),
 	union(Aux,LR,Aux2),
 	union(Aux2,LL,NList),
 	subtract(AllList,NList,List).
 
-% recursive_find(+Grid,+Ady,+Visited,+NAdy,-ReturnAdy)
+% recursive_find(+Grid,+Ady,+NoC,+Visited,+NAdy,-ReturnAdy)
 % Busca recursivamente adyacencias en aquellos bloques que ya fueron 
 % identificados como adyacentes válidos
-recursive_find(_Grid,[],_Visited,NAdy, NAdy).
-recursive_find(Grid,[X|Xs],Visited,NAdy, ReturnAdy):-
-	valid_moves(X,NPossible),
-	find_adyacencies(Grid,X,NAdy,NPossible,Visited,RAdy),
+recursive_find(_Grid,[],_NoC,_Visited,NAdy, NAdy).
+recursive_find(Grid,[X|Xs],NoC,Visited,NAdy, ReturnAdy):-
+	valid_moves(X,NoC,NPossible),
+	find_adyacencies(Grid,X,NoC,NAdy,NPossible,Visited,RAdy),
     union(NAdy,RAdy,NewAdy),
-	recursive_find(Grid,Xs,Visited,NewAdy, ReturnAdy).
+	recursive_find(Grid,Xs,NoC,Visited,NewAdy, ReturnAdy).
 
 % add_index(+Ady,+Index,+AuxAdy,-Moves)
 % Añade el indice actual a la lista de adyacencia en caso de no estar presente en la misma
@@ -162,14 +162,14 @@ add_index(Ady,_,[],Ady).
 add_index(Ady,Index,_AuxAdy,Moves) :-
     union(Ady,[Index],Moves).
 
-% merge_adys(+Grid,+Moves,+AuxAdy,+Visited,-ReturnAdy)
+% merge_adys(+Grid,+NoC,+Moves,+AuxAdy,+Visited,-ReturnAdy)
 % Buscamos nuevas adyacencias de forma recursiva
-merge_adys(_,Moves,[],_Visited,Moves).
-merge_adys(Grid,Moves,AuxAdy,Visited,ReturnAdy) :-
+merge_adys(_,_NoC,Moves,[],_Visited,Moves).
+merge_adys(Grid,NoC,Moves,AuxAdy,Visited,ReturnAdy) :-
     union(Moves,AuxAdy,RAdy),
-	recursive_find(Grid,AuxAdy,Visited,RAdy,ReturnAdy).
+	recursive_find(Grid,AuxAdy,NoC,Visited,RAdy,ReturnAdy).
 
-% find_adyacencies(+Grid,+Index,+Ady,+Possible,+Visited,-RAdy)
+% find_adyacencies(+Grid,+Index,+NoC,+Ady,+Possible,+Visited,-RAdy)
 % Genera una lista con los indices adyacentes al indice dado y que a su vez comparten valor con este
 % - Grid: La grilla del juego
 % - Index: El índice sobre el cual se buscaran adyacencias válidas
@@ -177,24 +177,24 @@ merge_adys(Grid,Moves,AuxAdy,Visited,ReturnAdy) :-
 % - Possible: La lista con las jugadas válidas para el indice actual
 % - Visited: La lista con todos los elementos visitados hasta el momento
 % - RAdy: La nueva lista de adyacencia local
-find_adyacencies(Grid,Index,Ady,Possible,Visited,RAdy) :-
+find_adyacencies(Grid,Index,NoC,Ady,Possible,Visited,RAdy) :-
 	findall(NI,(member(X,Possible),			
 				NI is X+Index, 
 				equal(Grid,NI,Index), 
 				not_member(NI,Ady),
                 not_member(NI,Visited)),AuxAdy),
     add_index(Ady,Index,AuxAdy,Moves),
-	merge_adys(Grid,Moves,AuxAdy,Visited,RAdy ).
+	merge_adys(Grid,NoC,Moves,AuxAdy,Visited,RAdy ).
 
-% list_booster(+Grid,+GridConsume,+Index,+Ady,+Visited,-LoL)
+% list_booster(+Grid,+GridConsume,+NoC,+Index,+Ady,+Visited,-LoL)
 % Genera una lista conformada por listas de adyacencias cuyos indices comparten valor
-list_booster(_Grid,[],_I,_Ady,_Visited,[]).
-list_booster(Grid,[_X|Xs],I,Ady,Visited,[RAdy|LoL]) :-
-	valid_moves(I,Possible),
-	find_adyacencies(Grid,I,Ady,Possible,Visited,RAdy),
+list_booster(_Grid,[],_NoC,_I,_Ady,_Visited,[]).
+list_booster(Grid,[_X|Xs],NoC,I,Ady,Visited,[RAdy|LoL]) :-
+	valid_moves(I,NoC,Possible),
+	find_adyacencies(Grid,I,NoC,Ady,Possible,Visited,RAdy),
 	union(RAdy,Visited,VisitedAUX),
 	NI is I+1,
-	list_booster(Grid,Xs,NI,[],VisitedAUX,LoL).
+	list_booster(Grid,Xs,NoC,NI,[],VisitedAUX,LoL).
 
 % make_move_booster(+Grid,+Path,-RGrid,-SumaTotal)
 % Dada una lista de indices de longitud N, inserta valores vacios en las 
@@ -227,18 +227,18 @@ join_booster(Grid, [X|Xs], NList, NumOfColumns, RGrids):-
 % booster(+Grid,+NumOfColumns,-RGrid)
 % Realiza toda la logica detras del booster "Colapsar Iguales"
 booster(Grid, NumOfColumns, RGrid):-
-	list_booster(Grid,Grid,0,[],[],LoL),
+	list_booster(Grid,Grid,NumOfColumns,0,[],[],LoL),
 	join_booster(Grid, LoL, [],NumOfColumns, RGrid).
 
 % ------------------------------------------------------------------------------------
 
-recursive_find_maxmove(_Grid,[],NAdy,NAdy, 1).
-recursive_find_maxmove(_Grid,[],_,[], 0).
-recursive_find_maxmove(Grid,[X|Xs],NAdy,[RAdy|L],_):-
-	valid_moves(X,NPossible),
-	find_adyacencies_maxmove(Grid,X,NAdy,NPossible,RAdy,1),
+recursive_find_maxmove(_Grid,[],_NoC,NAdy,NAdy, 1).
+recursive_find_maxmove(_Grid,[],_NoC,_,[], 0).
+recursive_find_maxmove(Grid,[X|Xs],NoC,NAdy,[RAdy|L],_):-
+	valid_moves(X,NoC,NPossible),
+	find_adyacencies_maxmove(Grid,X,NoC,NAdy,NPossible,RAdy,1),
 	!,
-    recursive_find_maxmove(Grid,Xs,NAdy,L,0).
+    recursive_find_maxmove(Grid,Xs,NoC,NAdy,L,0).
 
 equal_or_next(Grid,NI,I):-
     equal(Grid,NI,I).
@@ -247,28 +247,28 @@ equal_or_next(Grid,NI,I):-
 	nth0(I, Grid, Z),
     V is Z*2.
 
-find_adyacencies_maxmove(Grid,Index,Ady,Possible,RAdy,1) :-
+find_adyacencies_maxmove(Grid,Index,NoC,Ady,Possible,RAdy,1) :-
 	findall(NI,(member(X,Possible),			
 				NI is X+Index, 
 				equal_or_next(Grid,NI,Index), 
 				not_member(NI,Ady)),AuxAdy),
     union(Ady,[Index],Moves),
-	recursive_find_maxmove(Grid,AuxAdy,Moves,RAdy,1).
+	recursive_find_maxmove(Grid,AuxAdy,NoC,Moves,RAdy,1).
 
-find_adyacencies_maxmove(Grid,Index,Ady,Possible,RAdy,0) :-
+find_adyacencies_maxmove(Grid,Index,NoC,Ady,Possible,RAdy,0) :-
 	findall(NI,(member(X,Possible),			
 				NI is X+Index, 
 				equal(Grid,NI,Index), 
 				not_member(NI,Ady)),AuxAdy),
     union(Ady,[Index],Moves),
-	recursive_find_maxmove(Grid,AuxAdy,Moves,RAdy,1).
+	recursive_find_maxmove(Grid,AuxAdy,NoC,Moves,RAdy,1).
 
-list_maxmove(_Grid,[],_I,_Ady,[]).
-list_maxmove(Grid,[_X|Xs],I,Ady,[RAdy|LoL]) :-
-	valid_moves(I,Possible),
-	find_adyacencies_maxmove(Grid,I,Ady,Possible,RAdy,0),
+list_maxmove(_Grid,[],_NoC,_I,_Ady,[]).
+list_maxmove(Grid,[_X|Xs],NoC,I,Ady,[RAdy|LoL]) :-
+	valid_moves(I,NoC,Possible),
+	find_adyacencies_maxmove(Grid,I,NoC,Ady,Possible,RAdy,0),
 	NI is I+1,
-	list_maxmove(Grid,Xs,NI,[],LoL).
+	list_maxmove(Grid,Xs,NoC,NI,[],LoL).
 
 make_move_maxmove(_Grid,[],SumaTotal,SumaTotal).
 make_move_maxmove(Grid,[X|Xs],SumaTotal,Return):-
@@ -279,7 +279,7 @@ make_move_maxmove(Grid,[X|Xs],SumaTotal,Return):-
 
 get_maxmove(_,[],MaxList,MaxList,MaxValue,MaxValue).
 get_maxmove(Grid,[X|Xs],_,RList,MaxValue,RValue):-
-    \+number(x),
+    \+number(X),
 	make_move_maxmove(Grid,X,0,Value),
 	Value > MaxValue,
 	get_maxmove(Grid,Xs,X,RList,Value,RValue).
@@ -303,88 +303,86 @@ format_maxmove([I|Is],[[PosX|[PosY]]|Ls],NoC) :-
 	format_maxmove(Is,Ls,NoC).
 
 maxmove(Grid,RList,NoC):-
-	list_maxmove(Grid,Grid,0,[],LoL),
+	list_maxmove(Grid,Grid,NoC,0,[],LoL),
     cleanList(LoL,[],Cl),
 	get_maxmove(Grid,Cl,_,MaxList,0,_),
 	format_maxmove(MaxList,RList,NoC).
 
-recursive_find_maxAd(_Grid,[],NAdy,NAdy).
-recursive_find_maxAd(Grid,[X|Xs],NAdy,[NewAdy|L]):-
-	valid_moves(X,NPossible),
-	find_adyacencies_maxAd(Grid,X,NAdy,NPossible,RAdy,1),
+recursive_find_maxAd(_Grid,[],_NoC,NAdy,NAdy).
+recursive_find_maxAd(Grid,[X|Xs],NoC,NAdy,[NewAdy|L]):-
+	valid_moves(X,NoC,NPossible),
+	find_adyacencies_maxAd(Grid,X,NoC,NAdy,NPossible,RAdy,1),
     union(NAdy,RAdy,NewAdy),
-    recursive_find_maxAd(Grid,Xs,NAdy,L).
+    recursive_find_maxAd(Grid,Xs,NoC,NAdy,L).
 
-find_adyacencies_maxAd(Grid,Index,Ady,Possible,RAdy,1) :-
+find_adyacencies_maxAd(Grid,Index,NoC,Ady,Possible,RAdy,1) :-
 	findall(NI,(member(X,Possible),			
 				NI is X+Index, 
 				equal_or_next(Grid,NI,Index), 
 				not_member(NI,Ady)),AuxAdy),
     union(Ady,[Index],Moves),
-	recursive_find_maxAd(Grid,AuxAdy,Moves,RAdy).
+	recursive_find_maxAd(Grid,AuxAdy,NoC,Moves,RAdy).
 
-find_adyacencies_maxAd(Grid,Index,Ady,Possible,RAdy,0) :-
+find_adyacencies_maxAd(Grid,Index,NoC,Ady,Possible,RAdy,0) :-
 	findall(NI,(member(X,Possible),			
 				NI is X+Index, 
 				equal(Grid,NI,Index), 
 				not_member(NI,Ady)),AuxAdy),
     union(Ady,[Index],Moves),
-	recursive_find_maxAd(Grid,AuxAdy,Moves,RAdy).
+	recursive_find_maxAd(Grid,AuxAdy,NoC,Moves,RAdy).
 
-list_maxAd(_Grid,[],_I,_Ady,[]).
-list_maxAd(Grid,[_X|Xs],I,Ady,[RAdy|LoL]) :-
-	valid_moves(I,Possible),
-	find_adyacencies_maxAd(Grid,I,Ady,Possible,RAdy,0),
+list_maxAd(_Grid,[],_NoC,_I,_Ady,[]).
+list_maxAd(Grid,[_X|Xs],NoC,I,Ady,[RAdy|LoL]) :-
+	valid_moves(I,NoC,Possible),
+	find_adyacencies_maxAd(Grid,I,NoC,Ady,Possible,RAdy,0),
 	NI is I+1,
-	list_maxAd(Grid,Xs,NI,[],LoL).
+	list_maxAd(Grid,Xs,NoC,NI,[],LoL).
 
-make_move_maxAd(Grid,[],_NoC,Grid,SumaTotal,SumaTotal):- !.
-make_move_maxAd(Grid,[P],NoC,RGrid,SumaTotal,R) :-
+make_move_maxAd(Grid,[],Grid,SumaTotal,SumaTotal):- !.
+make_move_maxAd(Grid,[P],RGrid,SumaTotal,R) :-
 	nth0(P,Grid,Value),
 	SumaTotalAux is SumaTotal + Value,
 	result(SumaTotalAux, 1, Bloque),
 	replace(Grid, P, Bloque, Aux),
-	make_move_maxAd(Aux,[],NoC,RGrid,Bloque,R),
+	make_move_maxAd(Aux,[],RGrid,Bloque,R),
     !.
-make_move_maxAd(Grid,[P|Ps],NoC,RGrid,SumaTotal,R):-
+make_move_maxAd(Grid,[P|Ps],RGrid,SumaTotal,R):-
 	nth0(P,Grid,Value),
 	replace(Grid, P, 0, Aux),
 	SumaTotalAux is SumaTotal + Value,
-	make_move_maxAd(Aux,Ps,NoC,RGrid,SumaTotalAux,R).
+	make_move_maxAd(Aux,Ps,RGrid,SumaTotalAux,R).
 
-checkAdy(Grid,NumOfColumns,Index):-
-	valid_moves(Index,Possible),
+checkAdy(Grid,NoC,Index):-
+	valid_moves(Index,NoC,Possible),
 	findall(NI,(member(X,Possible),			
 				NI is X+Index, 
 				equal(Grid,NI,Index)),AuxAdy),
     \+length(AuxAdy,0).
 
-traceLast(Grid,Lx,VLx,Lx):-
+traceLast(Grid,_,Lx,VLx,Lx):-
 	nth0(Lx,Grid,VLx),!.
-traceLast(Grid,Lx,VLx,Rx):-
-	NLx is Lx+5,
-	traceLast(Grid,NLx,VLx,Rx).
+traceLast(Grid,NoC,Lx,VLx,Rx):-
+	NLx is Lx+NoC,
+	traceLast(Grid,NoC,NLx,VLx,Rx).
 
 get_maxAd(_,_,[],_MaxList,[],0,0).
 get_maxAd(_,_,[],MaxList,MaxList,MaxValue,MaxValue).
 get_maxAd(Grid,NoC,[X|Xs],_,RList,MaxValue,RValue):-
     \+number(X),
-	make_move_maxAd(Grid,X,NoC,RGrid,0,Value),
+	make_move_maxAd(Grid,X,RGrid,0,Value),
 	Value > MaxValue,
 	create_list_zeros(RGrid,0,NList),
 	last(X,Lx),
 	nth0(Lx,RGrid,VLx),
 	gravity(RGrid,NList,NoC,RGravity),
-	traceLast(RGravity,Lx,VLx,Rx),
-    %%CALCULAR LX POSICION CON MAX VALOR
-	%%PENSAR EN REDEFINIR GRAVITY
+	traceLast(RGravity,NoC,Lx,VLx,Rx),
     checkAdy(RGravity,NoC,Rx),
     get_maxAd(Grid,NoC,Xs,X,RList,Value,RValue).
 get_maxAd(Grid,NoC,[_|Xs],MaxList,RList,MaxValue,RValue):-
 	get_maxAd(Grid,NoC,Xs,MaxList,RList,MaxValue,RValue).
 
 maxAd(Grid,NoC,RList):-
-    list_maxAd(Grid,Grid,0,[],LoL),
+    list_maxAd(Grid,Grid,NoC,0,[],LoL),
     cleanList(LoL,[],Cl),
     get_maxAd(Grid,NoC,Cl,_,MaxList,0,_MaxValue),
 	format_maxmove(MaxList,RList,NoC).
