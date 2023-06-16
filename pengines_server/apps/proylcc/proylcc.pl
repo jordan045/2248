@@ -112,31 +112,31 @@ not_member(X, [H|T]) :-
 % check_up(+I,-List)
 % En caso de no poder movernos hacia arriba, devuelve los valores que 
 %no tendremos que considerar al momento de calcular las adyacencias
-check_up(I,NoC,[-6,-5,-4]) :- I < NoC,!.
+check_up(I,NoC,[-NoC-1,-NoC,-NoC+1]) :- I < NoC,!.
 check_up(I,NoC,[]) :- 		  I > NoC-1.
 
 % check_down(+I,-List)
 % En caso de no poder movernos hacia abajo, devuelve los valores que 
 %no tendremos que considerar al momento de calcular las adyacencias
 check_down(I,NoC,[]):-          I < NoC*7,!.
-check_down(I,NoC,[4,5,6]):-  	I > (NoC*7)-1.
+check_down(I,NoC,[NoC-1,NoC,NoC+1]):-  	I > (NoC*7)-1.
 
 % check_left(+I,-List)
 % En caso de no poder movernos hacia la izquierda, devuelve los valores que 
 %no tendremos que considerar al momento de calcular las adyacencias
 check_left(I,NoC,[]):-        Mod is I mod NoC, Mod =\= 0,!.
-check_left(I,NoC,[-6,-1,4]):- Mod is I mod NoC, Mod is 0.
+check_left(I,NoC,[-NoC-1,-1,NoC-1]):- Mod is I mod NoC, Mod is 0.
 
 % check_right(+I,-List)
 % En caso de no poder movernos hacia la derecha, devuelve los valores que 
 %no tendremos que considerar al momento de calcular las adyacencias
 check_right(I,NoC,[]):-       Mod is I mod NoC, Mod =\= NoC-1,!.
-check_right(I,NoC,[-4,1,6]):- Mod is I mod NoC, Mod is NoC-1.
+check_right(I,NoC,[-NoC+1,1,NoC+1]):- Mod is I mod NoC, Mod is NoC-1.
 
 % valid_moves(+Index,+NoC,-List)
 % Calcula las posiciones hacia las que nos podemos mover dado un determinado indice
 valid_moves(Index,NoC,List) :-
-	AllList = [-6,-5,-4,-1,1,4,5,6],
+	AllList = [-NoC-1,-NoC,-NoC+1,-1,1,NoC-1,NoC,NoC+1],
 	check_up(Index,NoC,LU),    
 	check_down(Index,NoC,LD),  
 	check_right(Index,NoC,LR), 
@@ -317,7 +317,7 @@ get_maxmove(Grid,[X|Xs],_,RList,MaxValue,RValue):-
 get_maxmove(Grid,[_|Xs],MaxList,RList,MaxValue,RValue):-
 	get_maxmove(Grid,Xs,MaxList,RList,MaxValue,RValue).
 
-% CleanList(+LoL,+Aux,-Cl)
+% cleanList(+LoL,+Aux,-Cl)
 % Dada una lista de listas con niveles de profundidad no uniformes, 
 % devuelve una Lista de lista de, a lo sumo, profundidad 1
 cleanList([],Aux,Aux).
@@ -330,7 +330,7 @@ cleanList([X|Xs],Aux,CCl):-
 cleanList([X],Aux,[X|Aux]).
 cleanList([X|Xs],Aux,[[X|Xs]|Aux]).
 
-% Format_maxmove(+List,-Rlist,+NoC)
+% format_maxmove(+List,-Rlist,+NoC)
 % Dado un indice Z, devuelve su equivalente como un par [X,Y]
 format_maxmove([],[],_NoC).
 format_maxmove([I|Is],[[PosX|[PosY]]|Ls],NoC) :-
@@ -447,7 +447,7 @@ get_maxAd(Grid,NoC,[X|Xs],_,RList,MaxValue,RValue):-
 get_maxAd(Grid,NoC,[_|Xs],MaxList,RList,MaxValue,RValue):-
 	get_maxAd(Grid,NoC,Xs,MaxList,RList,MaxValue,RValue).
 
-% maxmove(+Grid,-Rlist,+Noc)
+% maxAd(+Grid,-Rlist,+Noc)
 % Devuelve el path correspondiente a la jugada con el maximo valor posible en esa grilla
 % tal que se verifique que el bloque resultante de la jugada tenga igual valor a 
 % un bloque adyacente al mismo tras aplicar la gravedad
