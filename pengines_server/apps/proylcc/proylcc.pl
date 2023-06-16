@@ -212,6 +212,14 @@ make_move_booster(Grid,[P|Ps],RGrid,SumaTotal):-
 	SumaTotalAux is SumaTotal + Value,
 	make_move_booster(Aux,Ps,RGrid,SumaTotalAux).
 
+% reorderPath(+List,+Rlist)
+% Dada una lista de indices no ordenada, coloca el mayor indice al final de la misma.
+reorderPath([],[]).
+reorderPath(List,RList):-
+	max_list(List,MaxIndex),
+	delete(List,MaxIndex,Aux),
+	append(Aux,[MaxIndex],RList).
+	
 % join_booster(+Grid,+NList,+NumOfColumns,-RGrids)
 % Realiza los movimientos, gravedad y generación para el booster a partir de la lista de listas
 join_booster(Grid, [], NList, NumOfColumns, RGrids):-
@@ -219,7 +227,8 @@ join_booster(Grid, [], NList, NumOfColumns, RGrids):-
 	generate(RGravity,0,RGenerate),
 	RGrids = [Grid,RGravity,RGenerate].
 join_booster(Grid, [X|Xs], NList, NumOfColumns, RGrids):-
-	make_move_booster(Grid, X, Aux, 0),
+	reorderPath(X,ReturnPath),
+	make_move_booster(Grid, ReturnPath, Aux, 0),
 	create_list_zeros(Aux,0,NNList),
 	union(NList,NNList,List),
 	join_booster(Aux, Xs,List, NumOfColumns, RGrids).
