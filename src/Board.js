@@ -3,7 +3,7 @@ import Square from './Square';
 import Connector from './Connector';
 import { valueInPos, numberToColor, connectionInPath, posInPath, isAdyacent, equalPos } from './util';
 
-function Board({ grid, numOfColumns, path, onPathChange, onDone }) {
+function Board({ grid, numOfColumns, path, onPathChange, onDone , setWorking}) {
 
     function onSquareClick(pos) {
         if (path.length === 0) {    // Clicked the first square, so init the path with that square.
@@ -36,6 +36,7 @@ function Board({ grid, numOfColumns, path, onPathChange, onDone }) {
         window.addEventListener("keydown", e => {
             if (e.key === "Escape") {
                 onPathChange([]);
+                setWorking(false);
             }
         });
         // eslint-disable-next-line

@@ -117,7 +117,6 @@ function Game() {
     const gridS = JSON.stringify(grid);
     const queryS = "maxmove(" + gridS + ", MaxMove," + numOfColumns + ")";
     console.log(queryS);
-/*     setWaiting(true); */
     pengine.query(queryS, (success, response) => {
       if (success) {
         console.log('done');
@@ -128,7 +127,6 @@ function Game() {
         setWaiting(false);
       }
     });
-
   }
 
   function maxAd(){
@@ -179,6 +177,7 @@ function Game() {
         path={path}
         onPathChange={onPathChange}
         onDone={onPathDone}
+        setWorking={setWorking}
       />
       <div className="controlPanel">
         <div className="header">
@@ -218,5 +217,4 @@ function Game() {
     </div>
   );
 }
-
 export default Game;

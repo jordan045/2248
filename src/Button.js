@@ -6,7 +6,7 @@ function MyButton({onClick,name,color}) {
             style={{backgroundColor: color }}
             onClick={onClick}
         >
-            {name}<span class="load loading"></span>
+            {name}
         </div>
     );
 }
